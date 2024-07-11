@@ -1,0 +1,4 @@
+pyppeteer~=2.0.0
+pyppeteer_stealth~=2.7.4
+screeninfo~=0.8.1
+PyQt5~=5.15.10
