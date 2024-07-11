@@ -4,13 +4,13 @@
 Before proceeding, ensure Python is installed on your system. If not, you can download and install Python from [python.org](https://www.python.org/downloads/).
 ### Clone the Project
 ```bash
-git clone https://github.com/exoticaitsolutions/ABCGovtWebscrapping.git
+git clone https://github.com/exoticaitsolutions/abcbiz.abc-Project2.git
 ```
 
 ## Navigate to the Project Directory
 
 ```bash
-  cd ABCGovtWebscrapping
+  cd abcbiz.abc-Project2
 ```
 # **_Windows:_**
 ```
