@@ -162,4 +162,5 @@ cython_debug/
 .idea/
 .vscode
 temp/
-table_data.csv
+
+pip_install_log.txt

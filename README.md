@@ -12,48 +12,16 @@ git clone https://github.com/exoticaitsolutions/abcbiz.abc-Project2.git
 ```bash
   cd abcbiz.abc-Project2
 ```
+
+This script will create a virtual environment, activate it, and install all required packages specified in requirements.txt. and updating the pip 
+
 # **_Windows:_**
 ```
-py -m venv .venv
+setup.bat
 ```
 **Unix/MacOS:**
 ```
- python3 -m venv .venv
-```
-Then you have to activate the environment, by typing this command:
-Windows:
-```
-.venv\Scripts\activate.bat
-```
-Unix/MacOS:
-```
-source .venv/bin/activate
-```
-
-# Install Dependencies
-### Using requirements.txt
-
-**Windows:**
-
-```bash
-python.exe -m pip install -r requirements.txt
-```
-**Unix/MacOS/Linux:**
-```
-pip install -r requirements.txt
-```
-
-### Update the Pip using this Command
-
-**Windows:**
-
-```bash
-python.exe -m pip install --upgrade pip
-```
-**Unix/MacOS/Linux:**
-```
-pip install --upgrade pip
-
+bash setup.sh
 ```
 
 # Run Project
