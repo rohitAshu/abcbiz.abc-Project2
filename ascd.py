@@ -30,7 +30,7 @@ async def main(service_number=None, last_name=None, username=None, password=None
     print(f"Using user agent: {user_agent}")
     browser = await pyppeteerBrowserInit(HEADLESS, width, height, user_agent)
     print("browser init completed")
-    page = await browser.newPage()
+    page = await browser.newPage() # type: ignore
     # Use stealth plugin to bypass bot detection
     await stealth(page)
     await page.setViewport({'width': width, 'height': height})

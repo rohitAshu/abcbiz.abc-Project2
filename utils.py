@@ -1,6 +1,8 @@
 import os
 import platform
 import shutil
+import csv
+import json
 
 
 def find_chrome_path():
@@ -63,7 +65,6 @@ async def page_load(page, pageurl):
     Returns:
     - bool: True if page loaded successfully, False otherwise.
     """
-    print(f"Opening page from URL: {pageurl}")
     # Navigate to the page and wait for DOM content to be loaded
     response = await page.goto(pageurl, waitUntil="domcontentloaded")
     # Check response status
@@ -77,19 +78,21 @@ async def page_load(page, pageurl):
         return True
 
 
-async def check_condition(page):
-    check_script = """
-    function checkCondition() {
-        const div = document.querySelector('div.sc-gAnuJb.gzDMq');
-        if (div) {
-            const pElement = div.querySelector('p');
-            if (pElement && pElement.textContent.trim() === "There are no records by selected search parameters") {
-                return true;
-            }
-        }
-        return false;
-    }
-    checkCondition();
-    """
-    condition_exists = await page.evaluate(check_script)
-    return condition_exists
+def print_the_output_statement(output, message):
+    output.append(message)
+    output.repaint()
+    # Print the message to the console
+    print(message)
+
+
+# Function to convert a CSV file to JSON
+def csv_to_json(csv_file_path):
+    json_data = []
+
+    with open(csv_file_path, 'r', newline='', encoding='utf-8-sig') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for row in csv_reader:
+            # Remove any unwanted characters from keys
+            clean_row = {key.strip('\ufeff').strip('"'): value for key, value in row.items()}
+            json_data.append(clean_row)
+    return json_data
