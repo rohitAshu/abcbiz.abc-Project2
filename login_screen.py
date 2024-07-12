@@ -1,14 +1,49 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QFormLayout, QLabel, QLineEdit, \
-    QPushButton, QMessageBox, QHBoxLayout, QTextEdit
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QFileDialog,
+    QWidget,
+    QFormLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QMessageBox,
+    QHBoxLayout,
+    QTextEdit,
+)
 import sys
 import asyncio
 import scapping  # Make sure scrapping is imported correctly
-from utils import csv_to_json, print_the_output_statement
+from utils import convet_into_csv_and_save, csv_to_json, print_the_output_statement
 import time
+from datetime import datetime
+
+# Constants for file naming and paths
+FILE_NAME = "abcbiz_report"
+REPORT_FOLDER = "Daily_Report"
+FILE_TYPE = "csv"
+CURRENT_DATE = datetime.now()
 
 
 class LoginFormApp(QMainWindow):
+    """A class representing the login form application.
+
+    This application allows users to log in, upload CSV files, and scrape data.
+
+    Attributes:
+        page (obj): The current page object.
+        browser (obj): The current browser object.
+        start_time (float): The start time of the application.
+        file_path (str): The file path of the selected CSV file.
+    """
+
     def __init__(self):
+        """
+        Initialize the LoginFormApp class and set up the UI components.
+        
+        This method sets up the main window properties, form layout, and various widgets 
+        such as input fields, buttons, and an output area for displaying scraping results.
+        """
         super().__init__()
 
         # Set the window properties (title and initial size)
@@ -16,7 +51,9 @@ class LoginFormApp(QMainWindow):
         self.browser = None
         self.start_time = time.time()
         self.setWindowTitle("Login Form")
-        self.setGeometry(100, 100, 400, 300)  # Adjusted height to accommodate output area
+        self.setGeometry(
+            100, 100, 400, 300
+        )  # Adjusted height to accommodate output area
 
         # Create central widget for the main window
         central_widget = QWidget()
@@ -26,7 +63,9 @@ class LoginFormApp(QMainWindow):
         layout = QFormLayout()
         self.username_field = QLineEdit()
         self.password_field = QLineEdit()
-        self.password_field.setEchoMode(QLineEdit.Password)
+        self.password_field.setEchoMode(
+            QLineEdit.Password
+        )  # Set password field to hide input
         self.login_button = QPushButton("Login")
         self.login_button.clicked.connect(self.login)
         self.close_button = QPushButton("Close")
@@ -55,59 +94,141 @@ class LoginFormApp(QMainWindow):
         central_widget.setLayout(layout)
 
         # Instance variable to store file_path
-        self.file_path = ''
+        self.file_path = ""
 
     def login(self):
+        """
+        Handle the login process for the user.
+
+        This method retrieves the username and password from the input fields,
+        validates the input, and performs an asynchronous login operation.
+        If the login is successful, it updates the UI components accordingly.
+        If the login fails, it displays an error message.
+
+        Raises:
+            ValidationError: If the username or password fields are empty.
+            LoginError: If the login details are invalid.
+        """
         username = self.username_field.text()
         password = self.password_field.text()
-
+        # Validate input fields
         if username == "" or password == "":
-            QMessageBox.warning(self, "Validation Error", "Please Enter the Username and Password")
+            QMessageBox.warning(
+                self, "Validation Error", "Please Enter the Username and Password"
+            )
         else:
-            status, login_status, browser, page = asyncio.get_event_loop().run_until_complete(
-                scapping.abiotic_login(username=username, password=password, output_text=self.output_text))
-            print('login_status', login_status)
-            self.browser = browser  # Store file_path in instance variable
-            self.page = page  # Store file_path in instance variable
+            # Perform asynchronous login operation
+            (
+                status,
+                login_status,
+                browser,
+                page,
+            ) = asyncio.get_event_loop().run_until_complete(
+                scapping.abiotic_login(
+                    username=username, password=password, output_text=self.output_text
+                )
+            )
+            print("login_status", login_status)
+            self.browser = browser  # Store browser in instance variable
+            self.page = page  # Store page in instance variable
             if status:
+                # Update UI components on successful login
                 self.username_field.setReadOnly(True)
                 self.password_field.setReadOnly(True)
                 self.login_button.clicked.disconnect()  # Disconnect the clicked signal
                 self.upload_csv_button.setEnabled(True)
                 self.scrap_data_button.setEnabled(False)
             else:
+                # Display error message on login failure
                 QMessageBox.warning(self, "Validation Error", "Invalid Login Details")
-                print('Invalid Login Details')
+                print("Invalid Login Details")
 
     def scrap_data(self, file_path):
-        print('Scraping data...')
+        """Placeholder function for scraping data.
+
+        Args:
+            file_path (str): The file path of the selected CSV file.
+        """
+        print("Scraping data...")
         print(file_path)
         # Add your scraping or processing logic here
         # Example: Display file path in output_text
         self.output_text.append(f"Scraping data from: {file_path}")
 
     def upload_csv(self):
+        """
+        Handle the CSV file upload process, including validation and updating UI components.
 
+        This method opens a file dialog to allow the user to select a CSV file. If a file is selected,
+        it stores the file path in an instance variable and enables the "Scrap Data" button.
+        If no file is selected, it displays an error message.
+
+        Raises:
+            ValidationError: If no file is selected or if the selected file is not a CSV file.
+        """
         options = QFileDialog.Options()
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select File Name", "", "CSV Files (*.csv)", options=options)
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select File Name", "", "CSV Files (*.csv)", options=options
+        )
         if file_path:
             self.file_path = file_path  # Store file_path in instance variable
-            # self.print_the_output_statement(output_text, 'CSV file selected')
-            self.scrap_data_button.setEnabled(True)
+            self.scrap_data_button.setEnabled(True)  # Enable Scrap Data button
         else:
-            QMessageBox.warning(self, "Validation Error", "Please Choose the Correct CSV FILE")
+            # Display error message if no file is selected
+            QMessageBox.warning(
+                self, "Validation Error", "Please Choose the Correct CSV FILE"
+            )
 
     def scrap_data_button_clicked(self):
+        """
+        Handle the data scraping process when the Scrap Data button is clicked.
+        This method performs the following steps:
+        1. Checks if a CSV file path is stored in the instance variable.
+        2. Prints a message indicating the selected CSV file.
+        3. Converts the CSV data to JSON format.
+        4. Initiates the asynchronous data scraping process using the provided browser and page instances.
+        5. If the scraping is successful, saves the scraped data to a CSV file and prints success messages.
+        6. If the scraping fails, prints an error message.
+        7. Displays the total execution time for the data scraping process.
+
+        Raises:
+            ValidationError: If the CSV file path is invalid.
+        """
         file_path = self.file_path
         browser = self.browser
         page = self.page
         if file_path:
-            print_the_output_statement(self.output_text, f'CSV file selected {file_path}')
-            resource = csv_to_json(file_path)
-            status, scrapping_status, = asyncio.get_event_loop().run_until_complete(
-                scapping.scrapping_data(browser=browser, page=page, resource=resource, output_text=self.output_text))
-            print(scrapping_status)
+            print_the_output_statement(
+                self.output_text, f"CSV file selected {file_path}"
+            )
+            resource = csv_to_json(file_path)  # Convert CSV to JSON
+            (
+                status,
+                scrapping_status,
+            ) = asyncio.get_event_loop().run_until_complete(
+                scapping.scrapping_data(
+                    browser=browser,
+                    page=page,
+                    resource=resource,
+                    output_text=self.output_text,
+                )
+            )
+            if status:
+                # Define the output file path
+                output = f"{REPORT_FOLDER}/{CURRENT_DATE.strftime('%Y-%m-%d')}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
+                print("output", output)
+                print_the_output_statement(
+                    self.output_text, f"data save duccessfully save to {output}"
+                )
+                print("scrapping_status", scrapping_status)
+                json_response = convet_into_csv_and_save(
+                    scrapping_status, output
+                )  # Save scraped data to CSV
+                print("data Scrapp Successfully")
+            else:
+                print("Something Wrong")
         else:
+            # Display error message if file path is invalid
             QMessageBox.warning(self, "Validation Error", "Invalid Csv file")
         total_time = time.time() - self.start_time
         print_the_output_statement(
@@ -115,10 +236,12 @@ class LoginFormApp(QMainWindow):
         )
 
     def close_window(self):
+        """Close the application window."""
         self.close()
 
 
 def main():
+    """Main function to run the application."""
     app = QApplication(sys.argv)
     window = LoginFormApp()
     window.show()

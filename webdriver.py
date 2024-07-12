@@ -27,21 +27,24 @@ async def pyppeteerBrowserInit(headless, width, height, user_agent):
     print(f"window size: {width}x{height}")
     try:
         # Launch the browser with the specified arguments
-        browser = await launch(executablePath=executable_path, headless=headless, args=[
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-infobars",
-            f'--user-agent={user_agent}'
-            "--disable-dev-shm-usage",
-            "--disable-accelerated-2d-canvas",
-            "--disable-gpu",
-            f"--window-size={width},{height}",
-            "--start-maximized",
-            "--disable-notifications",
-            "--disable-popup-blocking",
-            "--ignore-certificate-errors",
-            "--allow-file-access",
-        ])
+        browser = await launch(
+            executablePath=executable_path,
+            headless=headless,
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-infobars",
+                f"--user-agent={user_agent}" "--disable-dev-shm-usage",
+                "--disable-accelerated-2d-canvas",
+                "--disable-gpu",
+                f"--window-size={width},{height}",
+                "--start-maximized",
+                "--disable-notifications",
+                "--disable-popup-blocking",
+                "--ignore-certificate-errors",
+                "--allow-file-access",
+            ],
+        )
         return browser
     except Exception as e:
         # Print the error and return None if an exception occurs
