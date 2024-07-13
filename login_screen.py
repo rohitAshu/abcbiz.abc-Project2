@@ -13,16 +13,24 @@ from PyQt5.QtWidgets import (
 )
 import sys
 import asyncio
+
+from screeninfo import get_monitors
 import scapping  # Make sure scrapping is imported correctly
 from utils import convet_into_csv_and_save, csv_to_json, print_the_output_statement
 import time
 from datetime import datetime
 
-# Constants for file naming and paths
+# Constants for file naming and paths Save data
 FILE_NAME = "abcbiz_report"
 REPORT_FOLDER = "Daily_Report"
 FILE_TYPE = "csv"
 CURRENT_DATE = datetime.now()
+
+
+LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for licensing reports
+# Headless
+HEADLESS = True  # Whether to run the app in headless mode (no GUI)
+FILE_NAME = "ABCGovtWebscrapping"
 
 
 class LoginFormApp(QMainWindow):
@@ -40,8 +48,8 @@ class LoginFormApp(QMainWindow):
     def __init__(self):
         """
         Initialize the LoginFormApp class and set up the UI components.
-        
-        This method sets up the main window properties, form layout, and various widgets 
+
+        This method sets up the main window properties, form layout, and various widgets
         such as input fields, buttons, and an output area for displaying scraping results.
         """
         super().__init__()
@@ -125,7 +133,13 @@ class LoginFormApp(QMainWindow):
                 page,
             ) = asyncio.get_event_loop().run_until_complete(
                 scapping.abiotic_login(
-                    username=username, password=password, output_text=self.output_text
+                    username=username,
+                    password=password,
+                    output_text=self.output_text,
+                    loginurl=LOGINURL,
+                    headless=HEADLESS,
+                    width=get_monitors()[0].width,
+                    height=get_monitors()[0].height,
                 )
             )
             print("login_status", login_status)
@@ -215,16 +229,14 @@ class LoginFormApp(QMainWindow):
             )
             if status:
                 # Define the output file path
-                output = f"{REPORT_FOLDER}/{CURRENT_DATE.strftime('%Y-%m-%d')}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
-                print("output", output)
-                print_the_output_statement(
-                    self.output_text, f"data save duccessfully save to {output}"
-                )
-                print("scrapping_status", scrapping_status)
-                json_response = convet_into_csv_and_save(
-                    scrapping_status, output
+                outputfile = f"{REPORT_FOLDER}/{CURRENT_DATE.strftime('%Y-%m-%d')}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
+                convet_into_csv_and_save(
+                    scrapping_status, outputfile
                 )  # Save scraped data to CSV
                 print("data Scrapp Successfully")
+                print_the_output_statement(
+                    self.output_text, f"data save duccessfully save to {outputfile}"
+                )
             else:
                 print("Something Wrong")
         else:

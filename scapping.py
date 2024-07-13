@@ -6,29 +6,41 @@ from fake_useragent import UserAgent
 from pyppeteer.errors import TimeoutError as PyppeteerTimeoutError
 import asyncio
 import pyppeteer
-import random
 from pyppeteer_stealth import stealth
 
-LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for licensing reports
-HEADLESS = True  # Whether to run the app in headless mode (no GUI)
-FILE_NAME = "ABCGovtWebscrapping"
-# Screen Resolution Settings
-width = get_monitors()[0].width  # Width of the primary monitor
-height = get_monitors()[0].height  # Height of the primary monitor
 
-
-async def abiotic_login(username=None, password=None, output_text=None):
+async def abiotic_login(
+    username=None,
+    password=None,
+    output_text=None,
+    loginurl=None,
+    headless=None,
+    width=None,
+    height=None,
+):
     """
-    Perform login to the ABC Biz website using the provided username and password.
+    Perform login to a specified website using the provided credentials and browser settings.
 
     Args:
-        username (str): Username for login.
-        password (str): Password for login.
-        output_text (function): Function to handle output text display.
+        username (str, optional): The username for the login. Defaults to None.
+        password (str, optional): The password for the login. Defaults to None.
+        output_text (QTextEdit, optional): A PyQt5 QTextEdit object for logging output. Defaults to None.
+        loginurl (str, optional): The URL of the login page. Defaults to None.
+        headless (bool, optional): Whether to run the browser in headless mode. Defaults to None.
+        width (int, optional): The width of the browser window. Defaults to None.
+        height (int, optional): The height of the browser window. Defaults to None.
 
     Returns:
-        tuple: A tuple containing success status (bool), response message (str),
-               browser instance, and page instance.
+        tuple: A tuple containing:
+            - status (bool): True if the login process completed, False otherwise.
+            - response (str): A message indicating the result of the login process.
+            - browser (Browser): The Pyppeteer browser instance.
+            - page (Page): The Pyppeteer page instance.
+
+    Raises:
+        PyppeteerTimeoutError: If a timeout error occurs during the login process.
+        pyppeteer.errors.NetworkError: If a network error occurs during the login process.
+        Exception: If any other exception occurs during the login process.
     """
     print_the_output_statement(output_text, "Login  Process ")
     loop = asyncio.new_event_loop()
@@ -36,7 +48,7 @@ async def abiotic_login(username=None, password=None, output_text=None):
     # Initialize the browser
     user_agent = UserAgent().random
     print(f"Using user agent: {user_agent}")
-    browser = await pyppeteerBrowserInit(HEADLESS, width, height, user_agent)
+    browser = await pyppeteerBrowserInit(headless, width, height, user_agent)
     print("browser init completed")
     page = await browser.newPage()  # type: ignore
     # Use stealth plugin to bypass bot detection
@@ -45,8 +57,8 @@ async def abiotic_login(username=None, password=None, output_text=None):
     await page.setUserAgent(user_agent)
     Response = ""
     try:
-        print_the_output_statement(output_text, f"Opening the url {LOGINURL}")
-        load_page = await page_load(page, LOGINURL)
+        print_the_output_statement(output_text, f"Opening the url {loginurl}")
+        load_page = await page_load(page, loginurl)
         if load_page:
             print(f"Page loaded successfully")
             await asyncio.sleep(7)
