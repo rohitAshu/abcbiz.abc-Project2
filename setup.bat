@@ -2,11 +2,11 @@
 echo "Starting setup script..."
 
 echo "Creating virtual environment..."
-python.exe -m venv venv
+python.exe -m venv .venv
 
 echo "Activating virtual environment in directory: %cd%"
 echo "Activating virtual environment..."
-call .\venv\Scripts\activate.bat
+call .\.venv\Scripts\activate.bat
 
 if %errorlevel% neq 0 (
     echo "Failed to activate virtual environment."

@@ -2,10 +2,10 @@
 echo "Starting setup script..."
 
 echo "Creating virtual environment..."
-python3 -m venv venv
+python3 -m venv ,venv
 
 echo "Activating virtual environment..."
-source venv/bin/activate
+source .venv/bin/activate
 
 if [ $? -ne 0 ]; then
     echo "Failed to activate virtual environment."
