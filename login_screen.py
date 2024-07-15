@@ -250,7 +250,7 @@ class LoginFormApp(QMainWindow):
                         print("if json_object:")
                         # Perform scraping using asyncio
                         status, scrapping_status = asyncio.get_event_loop().run_until_complete(
-                            scraping.scrapping_data(
+                            scapping.scrapping_data(
                                 browser=browser,
                                 page=page,
                                 resource=json_object,
