@@ -16,16 +16,21 @@ import asyncio
 
 from screeninfo import get_monitors
 import scapping  # Make sure scrapping is imported correctly
-from utils import convet_into_csv_and_save, csv_to_json, print_the_output_statement
+from utils import (
+    convent_into_csv_and_save,
+    csv_to_json,
+    print_the_output_statement,
+    check_json_length,
+)
 import time
 from datetime import datetime
+import json
 
 # Constants for file naming and paths Save data
 FILE_NAME = "abcbiz_report"
 REPORT_FOLDER = "Daily_Report"
 FILE_TYPE = "csv"
 CURRENT_DATE = datetime.now()
-
 
 LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for licensing reports
 # Headless
@@ -188,64 +193,98 @@ class LoginFormApp(QMainWindow):
             self.file_path = file_path  # Store file_path in instance variable
             self.scrap_data_button.setEnabled(True)  # Enable Scrap Data button
         else:
-            # Display error message if no file is selected
+            # Display an error message if no file is selected
             QMessageBox.warning(
                 self, "Validation Error", "Please Choose the Correct CSV FILE"
             )
 
     def scrap_data_button_clicked(self):
         """
-        Handle the data scraping process when the Scrap Data button is clicked.
+        Handle button click event for scraping data from a selected CSV file.
+
         This method performs the following steps:
-        1. Checks if a CSV file path is stored in the instance variable.
-        2. Prints a message indicating the selected CSV file.
-        3. Converts the CSV data to JSON format.
-        4. Initiates the asynchronous data scraping process using the provided browser and page instances.
-        5. If the scraping is successful, saves the scraped data to a CSV file and prints success messages.
-        6. If the scraping fails, prints an error message.
-        7. Displays the total execution time for the data scraping process.
+        1. Retrieve the file path, browser, and page from the class attributes.
+        2. Check if a CSV file path is selected.
+        3. Converts the selected CSV file to JSON format and retrieves the headers.
+        4. Validates the JSON data and checks for missing headers ('service_number' and 'last_name').
+        5. Loads the JSON data into a Python object and performs data scraping asynchronously.
+        6. Saves the scraped data to a CSV file and logs the output file path.
+        7. Handles errors gracefully and displays appropriate error messages.
+        8. Calculates and logs the total execution time of the method.
+
+        Returns:
+            None
 
         Raises:
-            ValidationError: If the CSV file path is invalid.
+            QMessageBox.warning: If no CSV file path is selected.
         """
-        file_path = self.file_path
-        browser = self.browser
-        page = self.page
+        file_path = self.file_path  # Get the file path from class attributes
+        browser = self.browser  # Get the browser instance from class attributes
+        page = self.page  # Get the page instance from class attributes
+
         if file_path:
-            print_the_output_statement(
-                self.output_text, f"CSV file selected {file_path}"
-            )
-            resource = csv_to_json(file_path)  # Convert CSV to JSON
-            (
-                status,
-                scrapping_status,
-            ) = asyncio.get_event_loop().run_until_complete(
-                scapping.scrapping_data(
-                    browser=browser,
-                    page=page,
-                    resource=resource,
-                    output_text=self.output_text,
-                )
-            )
-            if status:
-                # Define the output file path
-                outputfile = f"{REPORT_FOLDER}/{CURRENT_DATE.strftime('%Y-%m-%d')}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
-                convet_into_csv_and_save(
-                    scrapping_status, outputfile
-                )  # Save scraped data to CSV
-                print("data Scrapp Successfully")
-                print_the_output_statement(
-                    self.output_text, f"data save duccessfully save to {outputfile}"
-                )
+            # Print a message indicating the CSV file selected
+            print_the_output_statement(self.output_text, f"CSV file selected {file_path}")
+
+            # Convert CSV to JSON
+            csv_header, json_data_str = csv_to_json(file_path)
+
+            # Check the length of the JSON data
+            json_length = check_json_length(json_data_str)
+            if json_length != -1:
+                print("json_length", json_length)
+
+                # Check for missing headers in the CSV compared to expected headers
+                missing_headers = [
+                    header for header in ["service_number", "last_name"] if header not in csv_header
+                ]
+                if missing_headers:
+                    print("if missing_headers:")
+                    # Log and display missing headers in the output text
+                    print_the_output_statement(self.output_text, f"Missing headers in CSV: {missing_headers}")
+                else:
+                    print("else missing_headers:")
+                    # Load JSON data into a Python object
+                    json_object = json.loads(json_data_str)
+                    if json_object:
+                        print("if json_object:")
+                        # Perform scraping using asyncio
+                        status, scrapping_status = asyncio.get_event_loop().run_until_complete(
+                            scraping.scrapping_data(
+                                browser=browser,
+                                page=page,
+                                resource=json_object,
+                                output_text=self.output_text,
+                            )
+                        )
+                        if status:
+                            print("if status:")
+                            # Define an output file path for saving scraped data
+                            outputfile = f"{REPORT_FOLDER}/{CURRENT_DATE.strftime('%Y-%m-%d')}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
+                            print("outputfile", outputfile)
+
+                            # Save scraped data to CSV
+                            convert_into_csv_and_save(scrapping_status, outputfile)
+                            # Log and display a success message
+                            print_the_output_statement(self.output_text, f"data saved successfully to {outputfile}")
+                        else:
+                            print("Something Wrong")
+                    else:
+                        print("else json_object:")
+                        # Log and display a message if JSON object is empty
+                        print_the_output_statement(self.output_text, "JSON is empty")
             else:
-                print("Something Wrong")
+                # Log and display message if JSON data is invalid
+                print_the_output_statement(self.output_text, "Invalid JSON file")
         else:
-            # Display error message if file path is invalid
-            QMessageBox.warning(self, "Validation Error", "Invalid Csv file")
+            # Show a warning dialog if no file path is selected
+            QMessageBox.warning(self, "Validation Error", "Invalid CSV file")
+
+        # Calculate and log total execution time
         total_time = time.time() - self.start_time
-        print_the_output_statement(
-            self.output_text, f"Total execution time: {total_time:.2f} seconds"
-        )
+        print_the_output_statement(self.output_text, f"Total execution time: {total_time:.2f} seconds")
+
+
 
     def close_window(self):
         """Close the application window."""

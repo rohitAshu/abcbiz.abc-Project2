@@ -2,6 +2,7 @@ import os
 import platform
 import shutil
 import csv
+import json
 
 
 def find_chrome_path():
@@ -84,7 +85,7 @@ def print_the_output_statement(output, message):
     Args:
         output (list): The list or object to which the message will be appended.
         message (str): The message to append and print.
-    
+
     Returns:
         None
     """
@@ -95,29 +96,46 @@ def print_the_output_statement(output, message):
 
 
 # Function to convert a CSV file to JSON
-def csv_to_json(csv_file_path):
+def csv_to_json(csv_file):
     """
-    Converts a CSV file to a JSON format.
+    Converts a CSV file to a JSON formatted string and retrieves the headers.
 
     Args:
-        csv_file_path (str): The path to the CSV file to be converted.
+        csv_file (str): The path to the CSV file to be converted.
 
     Returns:
-        list: A list of dictionaries representing the CSV data in JSON format.
+        tuple: A tuple containing:
+            - list: A list of strings representing the headers (field names) extracted from the CSV file.
+            - str: A JSON formatted string representing the CSV data with an indentation of 4 spaces.
+
+            If an error occurs during file handling or JSON conversion:
+            - (None, str): (None, "Error: The specified CSV file was not found.") if the CSV file is not found.
+            - (None, str): (None, f"Error: An unexpected error occurred - {error_message}") for other errors.
     """
-    json_data = []
-    with open(csv_file_path, "r", newline="", encoding="utf-8-sig") as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            # Remove any unwanted characters from keys
-            clean_row = {
-                key.strip("\ufeff").strip('"'): value for key, value in row.items()
-            }
-            json_data.append(clean_row)
-    return json_data
+    try:
+        json_data = []
+        # Open the CSV file with UTF-8-sig encoding to handle BOM (Byte Order Mark)
+        with open(csv_file, "r", newline="", encoding="utf-8-sig") as csvfile:
+            reader = csv.DictReader(csvfile)  # Create a CSV reader object
+            headers = reader.fieldnames  # Retrieve the headers from the CSV
+            for row in reader:
+                json_data.append(row)  # Append each row (dictionary) to json_data list
+
+        # Convert json_data list to a formatted JSON string
+        json_data_str = json.dumps(json_data, indent=4)
+
+        # Return headers and JSON formatted string
+        return headers, json_data_str
+
+    except FileNotFoundError:
+        return None, "Error: The specified CSV file was not found."
+
+    except Exception as e:
+        # Handle unexpected errors by returning None for headers and an error message
+        return None, f"Error: An unexpected error occurred - {str(e)}"
 
 
-def convet_into_csv_and_save(json_data, out_put_csv):
+def convent_into_csv_and_save(json_data, out_put_csv):
     """
     Converts JSON data to CSV format and saves it to a specified file.
 
@@ -157,3 +175,23 @@ def convet_into_csv_and_save(json_data, out_put_csv):
         # Write rows
         for row in json_data:
             writer.writerow(row.values())
+
+
+def check_json_length(json_data):
+    try:
+        if isinstance(json_data, str):
+            json_obj = json.loads(json_data)  # Parse JSON string to a Python object
+        elif isinstance(json_data, dict):
+            json_obj = json_data  # Use directly if already a parsed JSON object
+        else:
+            return -1  # Invalid JSON data type
+
+        # Check length based on whether it's a list or dict
+        if isinstance(json_obj, (list, dict)):
+            return len(json_obj)
+        else:
+            return -1  # Not a valid JSON structure (should be list or dict)
+
+    except ValueError as e:
+        print(f"ValueError: {e}")
+        return -1  # JSON parsing error
