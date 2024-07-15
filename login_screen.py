@@ -27,11 +27,12 @@ from datetime import datetime
 import json
 
 # Constants for file naming and paths Save data
-FILE_NAME = "abcbiz_report"
+APP_NAME = "abcbiz_report"
 REPORT_FOLDER = "Daily_Report"
 FILE_TYPE = "csv"
 CURRENT_DATE = datetime.now()
 
+APP_BUTTON_NAME = "Login"
 LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for licensing reports
 # Headless
 HEADLESS = True  # Whether to run the app in headless mode (no GUI)
@@ -63,7 +64,7 @@ class LoginFormApp(QMainWindow):
         self.page = None
         self.browser = None
         self.start_time = time.time()
-        self.setWindowTitle("Login Form")
+        self.setWindowTitle(APP_NAME)
         self.setGeometry(
             100, 100, 400, 300
         )  # Adjusted height to accommodate output area
@@ -79,7 +80,7 @@ class LoginFormApp(QMainWindow):
         self.password_field.setEchoMode(
             QLineEdit.Password
         )  # Set password field to hide input
-        self.login_button = QPushButton("Login")
+        self.login_button = QPushButton(APP_BUTTON_NAME)
         self.login_button.clicked.connect(self.login)
         self.close_button = QPushButton("Close")
         self.close_button.clicked.connect(self.close_window)
