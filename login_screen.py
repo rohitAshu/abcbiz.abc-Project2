@@ -1,7 +1,3 @@
-import asyncio
-import json
-import time
-from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -14,21 +10,85 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QHBoxLayout,
     QTextEdit,
+    QDesktopWidget
+    
 )
 import sys
+import asyncio
+from PyQt5.QtCore import Qt , QSize
 
 from screeninfo import get_monitors
+import scapping  # Make sure scrapping is imported correctly
+import time
+from datetime import datetime
+import json
 
-import scapping
 from utils import check_json_length, convert_into_csv_and_save, csv_to_json, print_the_output_statement
 
+
+bootstrap_style = """
+QWidget {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+QMainWindow {
+    background-color: #f8f9fa;
+}
+
+QLabel {
+    color: #212529;
+}
+
+QLineEdit {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 14px;
+    color: #495057;
+}
+
+QLineEdit:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+QPushButton {
+    background-color: #007bff;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    color: white;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+QPushButton:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+QPushButton:disabled {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+QTextEdit {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 14px;
+    color: #495057;
+    background-color: white;
+}
+"""
 # Constants for file naming and paths Save data
-APP_NAME = "abcbiz_report"
+FILE_NAME = "abcbiz_report"
 REPORT_FOLDER = "Daily_Report"
 FILE_TYPE = "csv"
 CURRENT_DATE = datetime.now()
 
-APP_BUTTON_NAME = "Login"
 LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for licensing reports
 # Headless
 HEADLESS = True  # Whether to run the app in headless mode (no GUI)
@@ -47,6 +107,11 @@ class LoginFormApp(QMainWindow):
         file_path (str): The file path of the selected CSV file.
     """
 
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
     def __init__(self):
         """
         Initialize the LoginFormApp class and set up the UI components.
@@ -59,27 +124,35 @@ class LoginFormApp(QMainWindow):
         # Set the window properties (title and initial size)
         self.page = None
         self.browser = None
-        # Instance variable to store file_path
-        self.file_path = ""
-
         self.start_time = time.time()
-        self.setWindowTitle(APP_NAME)
+        self.setWindowTitle("Login Form")
         self.setGeometry(
             500, 500, 500, 500
         )  # Adjusted height to accommodate output area
-
+        self.center()  # Center the window
         # Create central widget for the main window
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+        
+        # Heading label for the form
+        heading_label = QLabel("<h2>Login Form</h2>")
+        heading_label.setAlignment(Qt.AlignCenter)
+
+
+        # Application title label
+        app_title_label = QLabel("<h1>ABCGovtWebscrapping</h1>")
+        app_title_label.setAlignment(Qt.AlignCenter)
 
         # Create your form layout and widgets here
         layout = QFormLayout()
+        layout.addRow(app_title_label)
+        layout.addRow(heading_label)
         self.username_field = QLineEdit()
         self.password_field = QLineEdit()
         self.password_field.setEchoMode(
             QLineEdit.Password
-        )  # Set the password field to hide input
-        self.login_button = QPushButton(APP_BUTTON_NAME)
+        )  # Set password field to hide input
+        self.login_button = QPushButton("Login")
         self.login_button.clicked.connect(self.login)
         self.close_button = QPushButton("Close")
         self.close_button.clicked.connect(self.close_window)
@@ -105,6 +178,9 @@ class LoginFormApp(QMainWindow):
         layout.addRow(QLabel("Output:"), self.output_text)
 
         central_widget.setLayout(layout)
+
+        # Instance variable to store file_path
+        self.file_path = ""
 
     def login(self):
         """
@@ -195,79 +271,93 @@ class LoginFormApp(QMainWindow):
                 self, "Validation Error", "Please Choose the Correct CSV FILE"
             )
 
-    async def scrap_data_button_clicked_async(self):
-        try:
-            file_path = self.file_path  # Get the file path from class attributes
-            browser = self.browser  # Get the browser instance from class attributes
-            page = self.page  # Get the page instance from class attributes
+    def scrap_data_button_clicked(self):
+        """
+        Handle button click event for scraping data from a selected CSV file.
 
-            if file_path:
-                # Print a message indicating the CSV file selected
-                print_the_output_statement(self.output_text, f"CSV file selected {file_path}")
+        This method performs the following steps:
+        1. Retrieve the file path, browser, and page from the class attributes.
+        2. Check if a CSV file path is selected.
+        3. Converts the selected CSV file to JSON format and retrieves the headers.
+        4. Validates the JSON data and checks for missing headers ('service_number' and 'last_name').
+        5. Loads the JSON data into a Python object and performs data scraping asynchronously.
+        6. Saves the scraped data to a CSV file and logs the output file path.
+        7. Handles errors gracefully and displays appropriate error messages.
+        8. Calculates and logs the total execution time of the method.
 
-                # Convert CSV to JSON
-                csv_header, json_data_str = csv_to_json(file_path)
+        Returns:
+            None
 
-                # Check the length of the JSON data
-                json_length = check_json_length(json_data_str)
-                if json_length != -1:
-                    print("json_length", json_length)
+        Raises:
+            QMessageBox.warning: If no CSV file path is selected.
+        """
+        file_path = self.file_path  # Get the file path from class attributes
+        browser = self.browser  # Get the browser instance from class attributes
+        page = self.page  # Get the page instance from class attributes
 
-                    # Check for missing headers in the CSV compared to expected headers
-                    missing_headers = [
-                        header for header in ["service_number", "last_name"] if header not in csv_header
-                    ]
-                    if missing_headers:
-                        print("if missing_headers:")
-                        # Log and display missing headers in the output text
-                        print_the_output_statement(self.output_text, f"Missing headers in CSV: {missing_headers}")
-                    else:
-                        print("else missing_headers:")
-                        # Load JSON data into a Python object
-                        json_object = json.loads(json_data_str)
-                        if json_object:
-                            print("if json_object:")
-                            # Perform scraping using asyncio
-                            status, scrapping_status = await scapping.scrapping_data(
+        if file_path:
+            # Print a message indicating the CSV file selected
+            print_the_output_statement(self.output_text, f"CSV file selected {file_path}")
+
+            # Convert CSV to JSON
+            csv_header, json_data_str = csv_to_json(file_path)
+
+            # Check the length of the JSON data
+            json_length = check_json_length(json_data_str)
+            if json_length != -1:
+                print("json_length", json_length)
+
+                # Check for missing headers in the CSV compared to expected headers
+                missing_headers = [
+                    header for header in ["service_number", "last_name"] if header not in csv_header
+                ]
+                if missing_headers:
+                    print("if missing_headers:")
+                    # Log and display missing headers in the output text
+                    print_the_output_statement(self.output_text, f"Missing headers in CSV: {missing_headers}")
+                else:
+                    print("else missing_headers:")
+                    # Load JSON data into a Python object
+                    json_object = json.loads(json_data_str)
+                    if json_object:
+                        print("if json_object:")
+                        # Perform scraping using asyncio
+                        status, scrapping_status = asyncio.get_event_loop().run_until_complete(
+                            scapping.scrapping_data(
                                 browser=browser,
                                 page=page,
                                 resource=json_object,
                                 output_text=self.output_text,
                             )
-                            if status:
-                                print("if status:")
-                                # Define an output file path for saving scraped data
-                                outputfile = f"{REPORT_FOLDER}/{CURRENT_DATE.strftime('%Y-%m-%d')}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
-                                print("outputfile", outputfile)
+                        )
+                        if status:
+                            print("if status:")
+                            # Define an output file path for saving scraped data
+                            outputfile = f"{REPORT_FOLDER}/{CURRENT_DATE.strftime('%Y-%m-%d')}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
+                            print("outputfile", outputfile)
 
-                                # Save scraped data to CSV
-                                convert_into_csv_and_save(scrapping_status, outputfile)
-                                # Log and display a success message
-                                print_the_output_statement(self.output_text, f"data saved successfully to {outputfile}")
-                            else:
-                                print("Something Wrong")
+                            # Save scraped data to CSV
+                            convert_into_csv_and_save(scrapping_status, outputfile)
+                            # Log and display a success message
+                            print_the_output_statement(self.output_text, f"data saved successfully to {outputfile}")
                         else:
-                            print("else json_object:")
-                            # Log and display a message if JSON object is empty
-                            print_the_output_statement(self.output_text, "JSON is empty")
-                else:
-                    # Log and display message if JSON data is invalid
-                    print_the_output_statement(self.output_text, "Invalid JSON file")
-
+                            print("Something Wrong")
+                    else:
+                        print("else json_object:")
+                        # Log and display a message if JSON object is empty
+                        print_the_output_statement(self.output_text, "JSON is empty")
             else:
-                # Show a warning dialog if no file path is selected
-                QMessageBox.warning(self, "Validation Error", "Invalid CSV file")
+                # Log and display message if JSON data is invalid
+                print_the_output_statement(self.output_text, "Invalid JSON file")
+        else:
+            # Show a warning dialog if no file path is selected
+            QMessageBox.warning(self, "Validation Error", "Invalid CSV file")
 
-        except Exception as e:
-            print_the_output_statement(self.output_text, f"Error: {str(e)}")
+        # Calculate and log total execution time
+        total_time = time.time() - self.start_time
+        print_the_output_statement(self.output_text, f"Total execution time: {total_time:.2f} seconds")
 
-        finally:
-            # Calculate and log total execution time
-            total_time = time.time() - self.start_time
-            print_the_output_statement(self.output_text, f"Total execution time: {total_time:.2f} seconds")
 
-    def scrap_data_button_clicked(self):
-        asyncio.ensure_future(self.scrap_data_button_clicked_async())
 
     def close_window(self):
         """Close the application window."""
@@ -277,6 +367,7 @@ class LoginFormApp(QMainWindow):
 def main():
     """Main function to run the application."""
     app = QApplication(sys.argv)
+    app.setStyleSheet(bootstrap_style)
     window = LoginFormApp()
     window.show()
     sys.exit(app.exec_())
