@@ -7,7 +7,7 @@ from pyppeteer.errors import TimeoutError as PyppeteerTimeoutError
 import asyncio
 import pyppeteer
 from pyppeteer_stealth import stealth
-from utils import convent_into_csv_and_save, csv_to_json, print_the_output_statement
+from utils import convert_into_csv_and_save, csv_to_json, print_the_output_statement
 
 
 async def abiotic_login(

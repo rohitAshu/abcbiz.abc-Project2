@@ -17,7 +17,7 @@ import asyncio
 from screeninfo import get_monitors
 import scapping  # Make sure scrapping is imported correctly
 from utils import (
-    convent_into_csv_and_save,
+    convert_into_csv_and_save,
     csv_to_json,
     print_the_output_statement,
     check_json_length,
@@ -79,7 +79,7 @@ class LoginFormApp(QMainWindow):
         self.password_field = QLineEdit()
         self.password_field.setEchoMode(
             QLineEdit.Password
-        )  # Set password field to hide input
+        )  # Set the password field to hide input
         self.login_button = QPushButton(APP_BUTTON_NAME)
         self.login_button.clicked.connect(self.login)
         self.close_button = QPushButton("Close")
@@ -284,8 +284,6 @@ class LoginFormApp(QMainWindow):
         # Calculate and log total execution time
         total_time = time.time() - self.start_time
         print_the_output_statement(self.output_text, f"Total execution time: {total_time:.2f} seconds")
-
-
 
     def close_window(self):
         """Close the application window."""

@@ -135,7 +135,7 @@ def csv_to_json(csv_file):
         return None, f"Error: An unexpected error occurred - {str(e)}"
 
 
-def convent_into_csv_and_save(json_data, out_put_csv):
+def convert_into_csv_and_save(json_data, out_put_csv):
     """
     Converts JSON data to CSV format and saves it to a specified file.
 
