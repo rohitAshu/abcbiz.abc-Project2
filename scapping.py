@@ -1,14 +1,13 @@
 from datetime import datetime
 from config import *
-from utils import print_the_output_statement, page_load, write_log
+from utils import print_the_output_statement, page_load
 from webdriver import pyppeteerBrowserInit
-from screeninfo import get_monitors
 from fake_useragent import UserAgent
 from pyppeteer.errors import TimeoutError as PyppeteerTimeoutError
 import asyncio
 import pyppeteer
 from pyppeteer_stealth import stealth
-from utils import convert_into_csv_and_save, csv_to_json, print_the_output_statement
+from utils import print_the_output_statement
 
 
 async def abiotic_login(
@@ -148,11 +147,13 @@ async def scrapping_data(browser=None, page=None, resource=None, output_text=Non
                     server_id_element = await page.xpath('//*[@id="serverId"]')
                     print("server_id_element", server_id_element)
                     await server_id_element[0].type(service_number)
-                    print(f'enter the server id f{service_number}')
+                    print(
+                        f"enter the service id...........!  {service_number}",
+                    )
                     last_name_element = await page.xpath(last_name_xpath)
                     print("last_name_element", last_name_element)
                     await last_name_element[0].type(last_name)
-                    print(f'enter the last name id f{last_name}')
+                    print(f"enter the last name ...........!  {last_name}")
                     # Click the search button
                     search_button_xpath = '//*[@id="root"]/div/div[3]/div/div[2]/div[2]/div[1]/div[2]/div/div/div/div/div[2]/button[2]/span[1]'
                     await page.waitForXPath(search_button_xpath)
@@ -182,12 +183,15 @@ async def scrapping_data(browser=None, page=None, resource=None, output_text=Non
                     element_exists = await page.evaluate(check_script)
                     print("element_exists", element_exists)
                     if element_exists:
-                        log_entry(service_number, last_name, 'Failed')
-                        print(f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}")
+                        log_entry('ERROR', service_number, last_name, f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}")
+                        print(
+                            f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}",
+                        )
                     else:
-                        log_entry(service_number, last_name, 'success')
-                        print(f"data found on the {service_number}")
-    
+                        print(
+                            f"data found on the {service_number}",
+                        )
+                        log_entry('INFO', service_number, last_name, 'success')
                         print("Scrapping................................")
                         table_data = await page.evaluate(
                             """() => {

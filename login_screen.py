@@ -15,95 +15,21 @@ from PyQt5.QtWidgets import (
 )
 import sys
 import asyncio
-from PyQt5.QtCore import Qt , QSize
+from PyQt5.QtCore import Qt
 
-from screeninfo import get_monitors
 from config import *
 import scapping  # Make sure scrapping is imported correctly
 import time
-from datetime import datetime
 import json
-
-from utils import check_json_length, convert_into_csv_and_save, csv_to_json, print_the_output_statement
-
-
-bootstrap_style = """
-QWidget {
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-}
-
-QMainWindow {
-    background-color: #f8f9fa;
-}
-
-QLabel {
-    color: #212529;
-}
-
-QLineEdit {
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    padding: 5px;
-    font-size: 14px;
-    color: #495057;
-}
-
-QLineEdit:focus {
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-}
-
-QPushButton {
-    background-color: #007bff;
-    border: 1px solid #007bff;
-    border-radius: 4px;
-    color: white;
-    padding: 5px 10px;
-    font-size: 14px;
-}
-
-QPushButton:hover {
-    background-color: #0056b3;
-    border-color: #0056b3;
-}
-
-QPushButton:disabled {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: white;
-}
-
-QTextEdit {
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    padding: 5px;
-    font-size: 14px;
-    color: #495057;
-    background-color: white;
-}
-"""
-
-
-
+from utils import check_json_length, convert_into_csv_and_save, csv_to_json, load_stylesheet, print_the_output_statement
 class LoginFormApp(QMainWindow):
-    """A class representing the login form application.
-
-    This application allows users to log in, upload CSV files, and scrape data.
-
-    Attributes:
-        page (obj): The current page object.
-        browser (obj): The current browser object.
-        start_time (float): The start time of the application.
-        file_path (str): The file path of the selected CSV file.
-    """
-
     def center(self):
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
+        
+        
     def __init__(self):
         """
         Initialize the LoginFormApp class and set up the UI components.
@@ -208,7 +134,6 @@ class LoginFormApp(QMainWindow):
                     output_text=self.output_text
                 )
             )
-            print("login_status", login_status)
             self.browser = browser  # Store browser in instance variable
             self.page = page  # Store page in instance variable
             if status:
@@ -297,10 +222,9 @@ class LoginFormApp(QMainWindow):
                             options = QFileDialog.Options()
                             folder_path = QFileDialog.getExistingDirectory(self, "Select Directory", options=options)
                             if folder_path:
-                                outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
-                                print("outputfile", outputfile) 
-                                convert_into_csv_and_save(scrapping_status, outputfile)
-                                print_the_output_statement(self.output_text, f"Data saved successfully to {outputfile}")
+                                  outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
+                                  print("outputfile", outputfile) 
+                                  convert_into_csv_and_save(scrapping_status, outputfile)
                             else:
                                 QMessageBox.warning(self, "Validation Error", "faild to the saved the data")
                                 print('faild to the saved the data ')
@@ -321,7 +245,6 @@ class LoginFormApp(QMainWindow):
         else:
             # Show a warning dialog if no file path is selected
             QMessageBox.warning(self, "Validation Error", "Invalid CSV file")
-
         # Calculate and log total execution time
         total_time = time.time() - self.start_time
         print_the_output_statement(self.output_text, f"Total execution time: {total_time:.2f} seconds")
@@ -336,7 +259,9 @@ class LoginFormApp(QMainWindow):
 def main():
     """Main function to run the application."""
     app = QApplication(sys.argv)
-    app.setStyleSheet(bootstrap_style)
+    
+    css_file_path = os.path.join('css', 'style.css')
+    app.setStyleSheet(load_stylesheet(css_file_path))
     window = LoginFormApp()
     window.show()
     sys.exit(app.exec_())
