@@ -143,9 +143,9 @@ class LoginFormApp(QMainWindow):
                 # Update UI components on successful login
                 self.username_field.setReadOnly(True)
                 self.password_field.setReadOnly(True)
-                self.login_button.clicked.disconnect()  # Disconnect the clicked signal
                 self.upload_csv_button.setEnabled(True)
                 self.scrap_data_button.setEnabled(False)
+                self.login_button.setEnabled(False)
             else:
                 # Display error message on login failure
                 QMessageBox.warning(self, "Validation Error", "Invalid Login Details")
@@ -228,13 +228,10 @@ class LoginFormApp(QMainWindow):
                         )
 
                         if status:
+                            print("if status:")
                             print_the_output_statement(
                                 self.output_text, f"Scraping completed."
                             )
-                            self.upload_csv_button.setEnabled(False)
-                            self.scrap_data_button.setEnabled(False)
-                            self.login_button.setEnabled(True)
-                            print("if status:")
                             print("scrapping_status", scrapping_status)
                             options = QFileDialog.Options()
                             folder_path = QFileDialog.getExistingDirectory(
@@ -244,6 +241,18 @@ class LoginFormApp(QMainWindow):
                                 outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
                                 print("outputfile", outputfile)
                                 convert_into_csv_and_save(scrapping_status, outputfile)
+                                self.login_button.setEnabled(True)
+                                self.scrap_data_button.setEnabled(False)
+                                self.upload_csv_button.setEnabled(False)
+                                print_the_output_statement(
+                                    self.output_text,
+                                    f"Data saved successfully to {outputfile}",
+                                )
+                                QMessageBox.warning(
+                                    self,
+                                    "success",
+                                    f"Data saved successfully to {outputfile}",
+                                )
                             else:
                                 QMessageBox.warning(
                                     self,
@@ -259,9 +268,7 @@ class LoginFormApp(QMainWindow):
                             self.upload_csv_button.setEnabled(True)
                             self.scrap_data_button.setEnabled(False)
                     else:
-                        QMessageBox.warning(
-                            self, "Validation Error", "CSV file is empty"
-                        )
+
                         print("CSV file is empty")
                         self.upload_csv_button.setEnabled(True)
                         self.scrap_data_button.setEnabled(False)

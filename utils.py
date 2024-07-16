@@ -89,7 +89,7 @@ def print_the_output_statement(output, message):
     Returns:
         None
     """
-    output.append(f"<b>{message}</b> \n")
+    output.append(f"<b>{message}</b> \n \n")
     output.repaint()
     # Print the message to the console
     print(message)
