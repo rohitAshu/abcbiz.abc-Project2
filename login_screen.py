@@ -10,8 +10,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QHBoxLayout,
     QTextEdit,
-    QDesktopWidget
-    
+    QDesktopWidget,
 )
 import sys
 import asyncio
@@ -21,15 +20,22 @@ from config import *
 import scapping  # Make sure scrapping is imported correctly
 import time
 import json
-from utils import check_json_length, convert_into_csv_and_save, csv_to_json, load_stylesheet, print_the_output_statement
+from utils import (
+    check_json_length,
+    convert_into_csv_and_save,
+    csv_to_json,
+    load_stylesheet,
+    print_the_output_statement,
+)
+
+
 class LoginFormApp(QMainWindow):
     def center(self):
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-        
-        
+
     def __init__(self):
         """
         Initialize the LoginFormApp class and set up the UI components.
@@ -51,11 +57,10 @@ class LoginFormApp(QMainWindow):
         # Create central widget for the main window
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        
+
         # Heading label for the form
         heading_label = QLabel("<h2>Login Form</h2>")
         heading_label.setAlignment(Qt.AlignCenter)
-
 
         # Application title label
         app_title_label = QLabel("<h1>ABCGovtWebscrapping</h1>")
@@ -129,9 +134,7 @@ class LoginFormApp(QMainWindow):
                 page,
             ) = asyncio.get_event_loop().run_until_complete(
                 scapping.abiotic_login(
-                    username=username,
-                    password=password,
-                    output_text=self.output_text
+                    username=username, password=password, output_text=self.output_text
                 )
             )
             self.browser = browser  # Store browser in instance variable
@@ -165,7 +168,9 @@ class LoginFormApp(QMainWindow):
             self.file_path = file_path  # Store file_path in instance variable
             self.scrap_data_button.setEnabled(True)  # Enable Scrap Data button
             self.upload_csv_button.setEnabled(False)  # Enable Scrap Data button
-            print_the_output_statement(self.output_text, f"CSV file selected {file_path}")
+            print_the_output_statement(
+                self.output_text, f"CSV file selected {file_path}"
+            )
         else:
             self.scrap_data_button.setEnabled(False)  # Enable Scrap Data button
             self.upload_csv_button.setEnabled(True)  # Enable Scrap Data button
@@ -178,7 +183,9 @@ class LoginFormApp(QMainWindow):
         file_path = self.file_path  # Get the file path from class attributes
         browser = self.browser  # Get the browser instance from class attributes
         page = self.page  # Get the page instance from class attributes
-        print_the_output_statement(self.output_text, "Scrapping started, please wait for few minutes.")
+        print_the_output_statement(
+            self.output_text, "Scrapping started, please wait for few minutes."
+        )
         if file_path:
             csv_header, json_data_str = csv_to_json(file_path)
             # Check the length of the JSON data
@@ -188,15 +195,19 @@ class LoginFormApp(QMainWindow):
 
                 # Check for missing headers in the CSV compared to expected headers
                 missing_headers = [
-                    header for header in ["service_number", "last_name"] if header not in csv_header
+                    header
+                    for header in ["service_number", "last_name"]
+                    if header not in csv_header
                 ]
                 if missing_headers:
                     print("if missing_headers:")
                     # Log and display missing headers in the output text
-                    print('missing the header in the csv')
+                    print("missing the header in the csv")
                     self.upload_csv_button.setEnabled(True)
                     self.scrap_data_button.setEnabled(False)
-                    QMessageBox.warning(self, "Validation Error", "missing the header in the csv")
+                    QMessageBox.warning(
+                        self, "Validation Error", "missing the header in the csv"
+                    )
                 else:
                     print("else missing_headers:")
                     # Load JSON data into a Python object
@@ -204,7 +215,10 @@ class LoginFormApp(QMainWindow):
                     if json_object:
                         print("if json_object:")
                         # Perform scraping using asyncio
-                        status, scrapping_status = asyncio.get_event_loop().run_until_complete(
+                        (
+                            status,
+                            scrapping_status,
+                        ) = asyncio.get_event_loop().run_until_complete(
                             scapping.scrapping_data(
                                 browser=browser,
                                 page=page,
@@ -212,44 +226,57 @@ class LoginFormApp(QMainWindow):
                                 output_text=self.output_text,
                             )
                         )
+
                         if status:
-                            print_the_output_statement(self.output_text, f"Scraping completed.")
+                            print_the_output_statement(
+                                self.output_text, f"Scraping completed."
+                            )
                             self.upload_csv_button.setEnabled(False)
                             self.scrap_data_button.setEnabled(False)
                             self.login_button.setEnabled(True)
                             print("if status:")
-                            print('scrapping_status',scrapping_status)
+                            print("scrapping_status", scrapping_status)
                             options = QFileDialog.Options()
-                            folder_path = QFileDialog.getExistingDirectory(self, "Select Directory", options=options)
+                            folder_path = QFileDialog.getExistingDirectory(
+                                self, "Select Directory", options=options
+                            )
                             if folder_path:
-                                  outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
-                                  print("outputfile", outputfile) 
-                                  convert_into_csv_and_save(scrapping_status, outputfile)
+                                outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
+                                print("outputfile", outputfile)
+                                convert_into_csv_and_save(scrapping_status, outputfile)
                             else:
-                                QMessageBox.warning(self, "Validation Error", "faild to the saved the data")
-                                print('faild to the saved the data ')
+                                QMessageBox.warning(
+                                    self,
+                                    "Validation Error",
+                                    "faild to the saved the data",
+                                )
+                                print("faild to the saved the data ")
                         else:
                             print("Something Wrong")
-                            QMessageBox.warning(self, "Validation Error", "Something Wrong")
+                            QMessageBox.warning(
+                                self, "Validation Error", "Something Wrong"
+                            )
                             self.upload_csv_button.setEnabled(True)
                             self.scrap_data_button.setEnabled(False)
                     else:
-                        QMessageBox.warning(self, "Validation Error", "CSV file is empty")
-                        print('CSV file is empty')
+                        QMessageBox.warning(
+                            self, "Validation Error", "CSV file is empty"
+                        )
+                        print("CSV file is empty")
                         self.upload_csv_button.setEnabled(True)
                         self.scrap_data_button.setEnabled(False)
             else:
                 self.upload_csv_button.setEnabled(False)
                 self.scrap_data_button.setEnabled(True)
-                print('Invalid CSV file')
+                print("Invalid CSV file")
         else:
             # Show a warning dialog if no file path is selected
             QMessageBox.warning(self, "Validation Error", "Invalid CSV file")
         # Calculate and log total execution time
         total_time = time.time() - self.start_time
-        print_the_output_statement(self.output_text, f"Total execution time: {total_time:.2f} seconds")
-
-
+        print_the_output_statement(
+            self.output_text, f"Total execution time: {total_time:.2f} seconds"
+        )
 
     def close_window(self):
         """Close the application window."""
@@ -259,8 +286,8 @@ class LoginFormApp(QMainWindow):
 def main():
     """Main function to run the application."""
     app = QApplication(sys.argv)
-    
-    css_file_path = os.path.join('css', 'style.css')
+
+    css_file_path = os.path.join("css", "style.css")
     app.setStyleSheet(load_stylesheet(css_file_path))
     window = LoginFormApp()
     window.show()

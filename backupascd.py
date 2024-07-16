@@ -45,14 +45,14 @@ async def main(service_number=None, last_name=None, username=None, password=None
             await page.waitForXPath(username_xpath)
             username_element = await page.xpath(username_xpath)
             print(f"username_element  found: {username_element}")
-            await username_element[0].type('mike@calabc.com')
+            await username_element[0].type("mike@calabc.com")
             print(f"enter user name ..............! and type {username}")
             await asyncio.sleep(3)
             password_xpath = '//*[@id="password"]'
             await page.waitForXPath(password_xpath)
             password_element = await page.xpath(password_xpath)
             # await password_element[0].type('19MichaelBrewer68!')
-            await password_element[0].type('19MichaelBrewer68!')
+            await password_element[0].type("19MichaelBrewer68!")
             print(f"enter password ........!")
             await asyncio.sleep(3)
             login_button_xpath = '//*[@id="root"]/div/div[3]/div/div/div[2]/div[1]/form/div[1]/button/span[1]'
@@ -172,4 +172,3 @@ async def main(service_number=None, last_name=None, username=None, password=None
         end_time = time.time()
         total_time = end_time - start_time
     print(f"Total execution time: {total_time:.2f} seconds")
-

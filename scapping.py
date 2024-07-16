@@ -40,7 +40,7 @@ async def abiotic_login(
         Exception: If any other exception occurs during the login process.
     """
     # print_the_output_statement(output_text, "Login  Process ")
-    print('Login Processing.........................')
+    print("Login Processing.........................")
     loop = asyncio.new_event_loop()
     print("browser init")
     # Initialize the browser
@@ -66,7 +66,7 @@ async def abiotic_login(
             username_element = await page.xpath(username_xpath)
             print(f"username_element  found: {username_element}")
             await username_element[0].type(username)
-            print(f'Enter the username with type {username}')
+            print(f"Enter the username with type {username}")
             await asyncio.sleep(3)
             password_xpath = '//*[@id="password"]'
             await page.waitForXPath(password_xpath)
@@ -140,7 +140,9 @@ async def scrapping_data(browser=None, page=None, resource=None, output_text=Non
                 service_number = record["service_number"]
                 last_name = record["last_name"]
                 if service_number and last_name:
-                    print(f"scrapping of the data {service_number} and last name {last_name}")
+                    print(
+                        f"scrapping of the data {service_number} and last name {last_name}"
+                    )
                     last_name_xpath = '//*[@id="lastName"]'
                     await page.waitForXPath('//*[@id="serverId"]')
                     await page.waitForXPath(last_name_xpath)
@@ -183,15 +185,21 @@ async def scrapping_data(browser=None, page=None, resource=None, output_text=Non
                     element_exists = await page.evaluate(check_script)
                     print("element_exists", element_exists)
                     if element_exists:
-                        log_entry('ERROR', service_number, last_name, f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}")
+                        log_entry(
+                            "ERROR",
+                            service_number,
+                            last_name,
+                            f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}",
+                        )
                         print(
                             f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}",
                         )
+
                     else:
                         print(
                             f"data found on the {service_number}",
                         )
-                        log_entry('INFO', service_number, last_name, 'success')
+                        log_entry("INFO", service_number, last_name, "success")
                         print("Scrapping................................")
                         table_data = await page.evaluate(
                             """() => {

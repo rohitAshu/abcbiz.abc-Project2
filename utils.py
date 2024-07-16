@@ -195,8 +195,9 @@ def check_json_length(json_data):
     except ValueError as e:
         print(f"ValueError: {e}")
         return -1  # JSON parsing error
-    
+
+
 def load_stylesheet(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         stylesheet = file.read()
     return stylesheet
