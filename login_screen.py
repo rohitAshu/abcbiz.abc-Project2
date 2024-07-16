@@ -18,6 +18,7 @@ import asyncio
 from PyQt5.QtCore import Qt , QSize
 
 from screeninfo import get_monitors
+from config import *
 import scapping  # Make sure scrapping is imported correctly
 import time
 from datetime import datetime
@@ -83,16 +84,7 @@ QTextEdit {
     background-color: white;
 }
 """
-# Constants for file naming and paths Save data
-FILE_NAME = "abcbiz_report"
-REPORT_FOLDER = "Daily_Report"
-FILE_TYPE = "csv"
-CURRENT_DATE = datetime.now()
 
-LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for licensing reports
-# Headless
-HEADLESS = True  # Whether to run the app in headless mode (no GUI)
-FILE_NAME = "ABCGovtWebscrapping"
 
 
 class LoginFormApp(QMainWindow):
@@ -213,11 +205,7 @@ class LoginFormApp(QMainWindow):
                 scapping.abiotic_login(
                     username=username,
                     password=password,
-                    output_text=self.output_text,
-                    loginurl=LOGINURL,
-                    headless=HEADLESS,
-                    width=get_monitors()[0].width,
-                    height=get_monitors()[0].height,
+                    output_text=self.output_text
                 )
             )
             print("login_status", login_status)
@@ -236,11 +224,7 @@ class LoginFormApp(QMainWindow):
                 print("Invalid Login Details")
 
     def scrap_data(self, file_path):
-        """Placeholder function for scraping data.
 
-        Args:
-            file_path (str): The file path of the selected CSV file.
-        """
         print("Scraping data...")
         print(file_path)
         # Add your scraping or processing logic here
@@ -248,16 +232,6 @@ class LoginFormApp(QMainWindow):
         self.output_text.append(f"Scraping data from: {file_path}")
 
     def upload_csv(self):
-        """
-        Handle the CSV file upload process, including validation and updating UI components.
-
-        This method opens a file dialog to allow the user to select a CSV file. If a file is selected,
-        it stores the file path in an instance variable and enables the "Scrap Data" button.
-        If no file is selected, it displays an error message.
-
-        Raises:
-            ValidationError: If no file is selected or if the selected file is not a CSV file.
-        """
         options = QFileDialog.Options()
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Select File Name", "", "CSV Files (*.csv)", options=options
@@ -265,43 +239,23 @@ class LoginFormApp(QMainWindow):
         if file_path:
             self.file_path = file_path  # Store file_path in instance variable
             self.scrap_data_button.setEnabled(True)  # Enable Scrap Data button
+            self.upload_csv_button.setEnabled(False)  # Enable Scrap Data button
+            print_the_output_statement(self.output_text, f"CSV file selected {file_path}")
         else:
+            self.scrap_data_button.setEnabled(False)  # Enable Scrap Data button
+            self.upload_csv_button.setEnabled(True)  # Enable Scrap Data button
             # Display an error message if no file is selected
             QMessageBox.warning(
                 self, "Validation Error", "Please Choose the Correct CSV FILE"
             )
 
     def scrap_data_button_clicked(self):
-        """
-        Handle button click event for scraping data from a selected CSV file.
-
-        This method performs the following steps:
-        1. Retrieve the file path, browser, and page from the class attributes.
-        2. Check if a CSV file path is selected.
-        3. Converts the selected CSV file to JSON format and retrieves the headers.
-        4. Validates the JSON data and checks for missing headers ('service_number' and 'last_name').
-        5. Loads the JSON data into a Python object and performs data scraping asynchronously.
-        6. Saves the scraped data to a CSV file and logs the output file path.
-        7. Handles errors gracefully and displays appropriate error messages.
-        8. Calculates and logs the total execution time of the method.
-
-        Returns:
-            None
-
-        Raises:
-            QMessageBox.warning: If no CSV file path is selected.
-        """
         file_path = self.file_path  # Get the file path from class attributes
         browser = self.browser  # Get the browser instance from class attributes
         page = self.page  # Get the page instance from class attributes
-
+        print_the_output_statement(self.output_text, "Scrapping started, please wait for few minutes.")
         if file_path:
-            # Print a message indicating the CSV file selected
-            print_the_output_statement(self.output_text, f"CSV file selected {file_path}")
-
-            # Convert CSV to JSON
             csv_header, json_data_str = csv_to_json(file_path)
-
             # Check the length of the JSON data
             json_length = check_json_length(json_data_str)
             if json_length != -1:
@@ -314,7 +268,10 @@ class LoginFormApp(QMainWindow):
                 if missing_headers:
                     print("if missing_headers:")
                     # Log and display missing headers in the output text
-                    print_the_output_statement(self.output_text, f"Missing headers in CSV: {missing_headers}")
+                    print('missing the header in the csv')
+                    self.upload_csv_button.setEnabled(True)
+                    self.scrap_data_button.setEnabled(False)
+                    QMessageBox.warning(self, "Validation Error", "missing the header in the csv")
                 else:
                     print("else missing_headers:")
                     # Load JSON data into a Python object
@@ -331,24 +288,36 @@ class LoginFormApp(QMainWindow):
                             )
                         )
                         if status:
+                            print_the_output_statement(self.output_text, f"Scraping completed.")
+                            self.upload_csv_button.setEnabled(False)
+                            self.scrap_data_button.setEnabled(False)
+                            self.login_button.setEnabled(True)
                             print("if status:")
-                            # Define an output file path for saving scraped data
-                            outputfile = f"{REPORT_FOLDER}/{CURRENT_DATE.strftime('%Y-%m-%d')}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
-                            print("outputfile", outputfile)
-
-                            # Save scraped data to CSV
-                            convert_into_csv_and_save(scrapping_status, outputfile)
-                            # Log and display a success message
-                            print_the_output_statement(self.output_text, f"data saved successfully to {outputfile}")
+                            print('scrapping_status',scrapping_status)
+                            options = QFileDialog.Options()
+                            folder_path = QFileDialog.getExistingDirectory(self, "Select Directory", options=options)
+                            if folder_path:
+                                outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
+                                print("outputfile", outputfile) 
+                                convert_into_csv_and_save(scrapping_status, outputfile)
+                                print_the_output_statement(self.output_text, f"Data saved successfully to {outputfile}")
+                            else:
+                                QMessageBox.warning(self, "Validation Error", "faild to the saved the data")
+                                print('faild to the saved the data ')
                         else:
                             print("Something Wrong")
+                            QMessageBox.warning(self, "Validation Error", "Something Wrong")
+                            self.upload_csv_button.setEnabled(True)
+                            self.scrap_data_button.setEnabled(False)
                     else:
-                        print("else json_object:")
-                        # Log and display a message if JSON object is empty
-                        print_the_output_statement(self.output_text, "JSON is empty")
+                        QMessageBox.warning(self, "Validation Error", "CSV file is empty")
+                        print('CSV file is empty')
+                        self.upload_csv_button.setEnabled(True)
+                        self.scrap_data_button.setEnabled(False)
             else:
-                # Log and display message if JSON data is invalid
-                print_the_output_statement(self.output_text, "Invalid JSON file")
+                self.upload_csv_button.setEnabled(False)
+                self.scrap_data_button.setEnabled(True)
+                print('Invalid CSV file')
         else:
             # Show a warning dialog if no file path is selected
             QMessageBox.warning(self, "Validation Error", "Invalid CSV file")

@@ -3,6 +3,7 @@ import platform
 import shutil
 import csv
 import json
+from datetime import datetime
 
 
 def find_chrome_path():
@@ -89,7 +90,7 @@ def print_the_output_statement(output, message):
     Returns:
         None
     """
-    output.append(f"<b>{message}</b> \n")
+    output.append(f"<b>{message}</b> \n \n")
     output.repaint()
     # Print the message to the console
     print(message)
@@ -135,46 +136,31 @@ def csv_to_json(csv_file):
         return None, f"Error: An unexpected error occurred - {str(e)}"
 
 
-def convert_into_csv_and_save(json_data, out_put_csv):
-    """
-    Converts JSON data to CSV format and saves it to a specified file.
-
-    Args:
-        json_data (list or dict): The JSON data to be converted, either as a dictionary or a list of dictionaries.
-        out_put_csv (str): The path to the output CSV file.
-
-    Raises:
-        ValueError: If the input json_data is not a dictionary or a list of dictionaries.
-
-    Returns:
-        None
-    """
-    # Ensure json_data is iterable
+def convert_into_csv_and_save(json_data, outputfile):
+    # Check if json_data is a dictionary or a list of dictionaries
     if isinstance(json_data, dict):
-        json_data = [
-            json_data
-        ]  # Convert single dictionary to a list containing that dictionary
-    elif not isinstance(json_data, list):
-        raise ValueError(
-            "Input json_data should be a dictionary or a list of dictionaries."
-        )
+        json_data = [json_data]
+    elif not isinstance(json_data, list) or not all(isinstance(item, dict) for item in json_data):
+        raise ValueError("Input json_data should be a dictionary or a list of dictionaries.")
 
-    report_directory = os.path.dirname(out_put_csv)
-    print("report_directory", report_directory)
+    # Get the keys from the first dictionary (assuming all dictionaries have the same keys)
+    if json_data:
+        keys = json_data[0].keys()
+    else:
+        raise ValueError("Input json_data is empty.")
 
-    if not os.path.exists(report_directory):
-        os.makedirs(report_directory)
-        print(f"Created directory: {report_directory}")
+    # Ensure the output directory exists
+    output_dir = os.path.dirname(outputfile)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    with open(out_put_csv, "w", newline="") as file:
-        writer = csv.writer(file)
+    # Write data to CSV file
+    with open(outputfile, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=keys)
+        writer.writeheader()
+        writer.writerows(json_data)
 
-        # Write header using keys from the first dictionary in the JSON data
-        writer.writerow(json_data[0].keys())
-
-        # Write rows
-        for row in json_data:
-            writer.writerow(row.values())
+    print(f"Data has been successfully written to {outputfile}")
 
 
 def check_json_length(json_data):
@@ -195,3 +181,25 @@ def check_json_length(json_data):
     except ValueError as e:
         print(f"ValueError: {e}")
         return -1  # JSON parsing error
+
+
+# Create log directory if it doesn't exist
+log_dir = 'log'
+os.makedirs(log_dir, exist_ok=True)
+
+# Get current date
+current_date = datetime.now().strftime('%Y-%m-%d')
+
+# Define the log file path based on the current date
+log_file_path = os.path.join(log_dir, f"log_{current_date}.txt")
+
+# Write header to the log file
+header = "Report_date,ServiceID,Name,Status\n"
+with open(log_file_path, 'a') as file:
+    file.write(header)
+
+# Function to write log messages
+def write_log(service_id, name, status):
+    log_message = f"{current_date},{service_id},{name},{status}\n"
+    with open(log_file_path, 'a') as file:
+        file.write(log_message)
