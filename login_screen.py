@@ -3,14 +3,13 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QFileDialog,
     QWidget,
-    QFormLayout,
+    QVBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
     QMessageBox,
     QHBoxLayout,
     QTextEdit,
-    QDesktopWidget,
 )
 import sys
 import asyncio
@@ -21,89 +20,84 @@ import scapping  # Make sure scrapping is imported correctly
 import time
 import json
 from utils import (
+    center_window,
     check_json_length,
     convert_into_csv_and_save,
     csv_to_json,
     load_stylesheet,
     print_the_output_statement,
+    show_message_box,
 )
 
 
 class LoginFormApp(QMainWindow):
-    def center(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-
     def __init__(self):
-        """
-        Initialize the LoginFormApp class and set up the UI components.
-
-        This method sets up the main window properties, form layout, and various widgets
-        such as input fields, buttons, and an output area for displaying scraping results.
-        """
         super().__init__()
+        self.setWindowTitle(APP_NAME)
+        self.setGeometry(500, 500, 800, 500)
+        center_window(self)
+        self.start_time = time.time()  # Initialize start_time
+        self.initUI()
 
-        # Set the window properties (title and initial size)
-        self.page = None
-        self.browser = None
-        self.start_time = time.time()
-        self.setWindowTitle("Login Form")
-        self.setGeometry(
-            500, 500, 500, 500
-        )  # Adjusted height to accommodate output area
-        self.center()  # Center the window
-        # Create central widget for the main window
+    def initUI(self):
+        print("initUI call")
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-
-        # Heading label for the form
-        heading_label = QLabel("<h2>Login Form</h2>")
-        heading_label.setAlignment(Qt.AlignCenter)
-
-        # Application title label
+        layout = QVBoxLayout()
+        central_widget.setLayout(layout)
         app_title_label = QLabel("<h1>ABCGovtWebscrapping</h1>")
         app_title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(app_title_label)
 
-        # Create your form layout and widgets here
-        layout = QFormLayout()
-        layout.addRow(app_title_label)
-        layout.addRow(heading_label)
+        heading_label = QLabel("<h2>Login Form</h2>")
+        heading_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(heading_label)
+
+        # FORM
+        # Creating form layout for username and password
+        form_layout = QVBoxLayout()
+        layout.addLayout(form_layout)
+
         self.username_field = QLineEdit()
         self.password_field = QLineEdit()
-        self.password_field.setEchoMode(
-            QLineEdit.Password
-        )  # Set password field to hide input
+        self.password_field.setEchoMode(QLineEdit.Password)
+
+        form_layout.addWidget(QLabel("Username:"))
+        form_layout.addWidget(self.username_field)
+        form_layout.addWidget(QLabel("Password:"))
+        form_layout.addWidget(self.password_field)
+
+        # Creating button layout for login and close buttons
+        button_layout = QHBoxLayout()
+        form_layout.addLayout(button_layout)
+
         self.login_button = QPushButton("Login")
-        self.login_button.clicked.connect(self.login)
         self.close_button = QPushButton("Close")
+        self.login_button.clicked.connect(self.login)
         self.close_button.clicked.connect(self.close_window)
-        layout.addRow(QLabel("Username:"), self.username_field)
-        layout.addRow(QLabel("Password:"), self.password_field)
-        layout.addRow(self.login_button, self.close_button)
 
-        # Initialize button layout for Upload CSV and Scrap Data buttons
-        self.button_layout = QHBoxLayout()
+        button_layout.addWidget(self.login_button)
+        button_layout.addWidget(self.close_button)
+
+        # Creating a separate button layout for upload and scrap data buttons
+        bottom_button_layout = QHBoxLayout()
+        layout.addLayout(bottom_button_layout)
+
         self.upload_csv_button = QPushButton("Upload CSV")
-        self.upload_csv_button.setEnabled(False)  # Initially disabled
-        self.upload_csv_button.clicked.connect(self.upload_csv)
+        self.upload_csv_button.setEnabled(False)
         self.scrap_data_button = QPushButton("Scrap Data")
-        self.scrap_data_button.setEnabled(False)  # Initially disabled
+        self.scrap_data_button.setEnabled(False)
+        self.upload_csv_button.clicked.connect(self.upload_csv)
         self.scrap_data_button.clicked.connect(self.scrap_data_button_clicked)
-        self.button_layout.addWidget(self.upload_csv_button)
-        self.button_layout.addWidget(self.scrap_data_button)
-        layout.addRow(self.button_layout)
 
-        # Output text area for scraping results
+        bottom_button_layout.addWidget(self.upload_csv_button)
+        bottom_button_layout.addWidget(self.scrap_data_button)
+
+        # Adding output text area
         self.output_text = QTextEdit()
-        self.output_text.setReadOnly(True)  # Make it read-only
-        layout.addRow(QLabel("Output:"), self.output_text)
-
-        central_widget.setLayout(layout)
-
-        # Instance variable to store file_path
-        self.file_path = ""
+        self.output_text.setReadOnly(True)
+        layout.addWidget(QLabel("Output:"))
+        layout.addWidget(self.output_text)
 
     def login(self):
         """
@@ -122,8 +116,11 @@ class LoginFormApp(QMainWindow):
         password = self.password_field.text()
         # Validate input fields
         if username == "" or password == "":
-            QMessageBox.warning(
-                self, "Validation Error", "Please Enter the Username and Password"
+            show_message_box(
+                self,
+                QMessageBox.Warning,
+                "vaidation error",
+                "Please Enter the Username and Password",
             )
         else:
             # Perform asynchronous login operation
@@ -140,6 +137,7 @@ class LoginFormApp(QMainWindow):
             self.browser = browser  # Store browser in instance variable
             self.page = page  # Store page in instance variable
             if status:
+                print("login_status", login_status)
                 # Update UI components on successful login
                 self.username_field.setReadOnly(True)
                 self.password_field.setReadOnly(True)
@@ -147,8 +145,12 @@ class LoginFormApp(QMainWindow):
                 self.scrap_data_button.setEnabled(False)
                 self.login_button.setEnabled(False)
             else:
-                # Display error message on login failure
-                QMessageBox.warning(self, "Validation Error", "Invalid Login Details")
+                show_message_box(
+                    self,
+                    QMessageBox.Warning,
+                    "vaidation error",
+                    "Invalid Login Details and please enter login Details",
+                )
                 print("Invalid Login Details")
 
     def scrap_data(self, file_path):
@@ -174,9 +176,11 @@ class LoginFormApp(QMainWindow):
         else:
             self.scrap_data_button.setEnabled(False)  # Enable Scrap Data button
             self.upload_csv_button.setEnabled(True)  # Enable Scrap Data button
-            # Display an error message if no file is selected
-            QMessageBox.warning(
-                self, "Validation Error", "Please Choose the Correct CSV FILE"
+            show_message_box(
+                self,
+                QMessageBox.Warning,
+                "File Error",
+                "Please Choose the Correct CSV FILE",
             )
 
     def scrap_data_button_clicked(self):
@@ -205,8 +209,11 @@ class LoginFormApp(QMainWindow):
                     print("missing the header in the csv")
                     self.upload_csv_button.setEnabled(True)
                     self.scrap_data_button.setEnabled(False)
-                    QMessageBox.warning(
-                        self, "Validation Error", "missing the header in the csv"
+                    show_message_box(
+                        self,
+                        QMessageBox.Warning,
+                        "File Error",
+                        "missing the header in the csv please choose the correct csv ",
                     )
                 else:
                     print("else missing_headers:")
@@ -226,7 +233,6 @@ class LoginFormApp(QMainWindow):
                                 output_text=self.output_text,
                             )
                         )
-
                         if status:
                             print("if status:")
                             print_the_output_statement(
@@ -248,28 +254,35 @@ class LoginFormApp(QMainWindow):
                                     self.output_text,
                                     f"Data saved successfully to {outputfile}",
                                 )
-                                QMessageBox.warning(
+                                show_message_box(
                                     self,
+                                    QMessageBox.NoIcon,
                                     "success",
                                     f"Data saved successfully to {outputfile}",
                                 )
                             else:
-                                QMessageBox.warning(
+                                show_message_box(
                                     self,
-                                    "Validation Error",
-                                    "faild to the saved the data",
+                                    QMessageBox.Warning,
+                                    "error",
+                                    "failed to the saved the data",
                                 )
-                                print("faild to the saved the data ")
+
+                                print("failed to the saved the data ")
                         else:
-                            print("Something Wrong")
-                            QMessageBox.warning(
-                                self, "Validation Error", "Something Wrong"
+                            show_message_box(
+                                self,
+                                QMessageBox.Critical,
+                                "error",
+                                "Internal Error Occurred while running application. Please Try Again!!",
                             )
                             self.upload_csv_button.setEnabled(True)
                             self.scrap_data_button.setEnabled(False)
                     else:
-
                         print("CSV file is empty")
+                        show_message_box(
+                            self, QMessageBox.Critical, "error", "CSV file is empty"
+                        )
                         self.upload_csv_button.setEnabled(True)
                         self.scrap_data_button.setEnabled(False)
             else:

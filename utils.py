@@ -3,6 +3,31 @@ import platform
 import shutil
 import csv
 import json
+from PyQt5.QtWidgets import QDesktopWidget
+from PyQt5.QtWidgets import QMessageBox
+
+
+def show_message_box(parent, icon_type, title, text):
+    msg_box = QMessageBox(parent)
+    msg_box.setIcon(icon_type)
+    msg_box.setWindowTitle(title)
+    msg_box.setText(text)
+    msg_box.setStandardButtons(QMessageBox.Ok)
+    msg_box.exec_()
+
+
+def center_window(window):
+    """
+    Center the given PyQt window on the screen.
+
+    Args:
+        window (QWidget): The PyQt window to be centered.
+    """
+    qr = window.frameGeometry()
+    cp = QDesktopWidget().availableGeometry().center()
+    qr.moveCenter(cp)
+    window.move(qr.topLeft())
+
 
 
 def find_chrome_path():
