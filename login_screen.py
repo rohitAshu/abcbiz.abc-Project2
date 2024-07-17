@@ -16,7 +16,7 @@ import asyncio
 from PyQt5.QtCore import Qt
 
 from config import *
-import scapping  # Make sure scrapping is imported correctly
+import scrapping  # Make sure scrapping is imported correctly
 import time
 import json
 from utils import (
@@ -130,7 +130,7 @@ class LoginFormApp(QMainWindow):
                 browser,
                 page,
             ) = asyncio.get_event_loop().run_until_complete(
-                scapping.abiotic_login(
+                scrapping.abiotic_login(
                     username=username, password=password, output_text=self.output_text
                 )
             )
@@ -226,7 +226,7 @@ class LoginFormApp(QMainWindow):
                             status,
                             scrapping_status,
                         ) = asyncio.get_event_loop().run_until_complete(
-                            scapping.scrapping_data(
+                            scrapping.scrapping_data(
                                 browser=browser,
                                 page=page,
                                 resource=json_object,
@@ -290,8 +290,7 @@ class LoginFormApp(QMainWindow):
                 self.scrap_data_button.setEnabled(True)
                 print("Invalid CSV file")
         else:
-            show_message_box(
-                            self, QMessageBox.Critical, "error", "Invalid CSV file")
+            show_message_box(self, QMessageBox.Critical, "error", "Invalid CSV file")
         # Calculate and log total execution time
         total_time = time.time() - self.start_time
         print_the_output_statement(
@@ -307,7 +306,12 @@ class LoginFormApp(QMainWindow):
         Returns:
             None
         """
-        result = show_message_box(self, QMessageBox.Question, "Confirmation", "Are you sure you want to close the browser?")
+        result = show_message_box(
+            self,
+            QMessageBox.Question,
+            "Confirmation",
+            "Are you sure you want to close the browser?",
+        )
         if result == QMessageBox.Yes:
             self.close()  # Close the window if user clicks 'Yes'
 
@@ -335,7 +339,6 @@ def main():
     window.show()  # Show the login form window
 
     sys.exit(app.exec_())  # Start the application event loop and exit when it's done
-    
 
 
 if __name__ == "__main__":

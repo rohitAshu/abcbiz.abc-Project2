@@ -11,8 +11,8 @@ REPORT_FOLDER = "Daily_Report"  # Folder where reports are stored
 FILE_TYPE = "csv"  # Type of the report files
 CURRENT_DATE = datetime.now()  # Current date and time
 FILE_NAME = "ABCGovtWebscrapping"  # Base name for the files
-LOG_TYPE = 'log'  # Type of log files
-LOG_FOLDER = 'log'  # Folder where log files are stored
+LOG_TYPE = "log"  # Type of log files
+LOG_FOLDER = "log"  # Folder where log files are stored
 LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for the login page
 HEADLESS = True  # Flag for headless browser mode
 
@@ -23,10 +23,13 @@ HEIGHT = monitor.height  # Height of the screen
 
 ensure_log_folder_exists(LOG_FOLDER)
 
+
 # Function to write log entries directly to a file
 def log_entry(log_type, service_id, name, status):
     # Define the log file name within the log folder
-    log_filename = os.path.join(LOG_FOLDER, f"logfile_{CURRENT_DATE.strftime('%Y-%m-%d_%H-%M-%S')}.{LOG_TYPE}")
+    log_filename = os.path.join(
+        LOG_FOLDER, f"logfile_{CURRENT_DATE.strftime('%Y-%m-%d_%H-%M-%S')}.{LOG_TYPE}"
+    )
     # Check if the file already exists to write the header only once
     file_exists = os.path.isfile(log_filename)
 
