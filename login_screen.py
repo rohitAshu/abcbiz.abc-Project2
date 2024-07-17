@@ -148,13 +148,6 @@ class LoginFormApp(QMainWindow):
         self.output_text.setReadOnly(True)
         self.output_text.setFont(QFont("Arial", 12))  # Example: set font
         self.output_text.setFont(font)
-        self.output_text.setStyleSheet("""
-            QTextEdit {
-                background-color: #ccf7ff;  /* Light blue background */
-                border: 1px solid #B0C4DE;  /* Light steel blue border */
-                padding: 5px;  /* Padding inside the widget */
-            }
-        """)
         self.output_text.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         layout.addWidget(self.output_text)
 
