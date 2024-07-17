@@ -49,7 +49,7 @@ class LoginFormApp(QMainWindow):
     def __init__(self):
         """
         Initializes the main window, sets the window title and geometry,
-        centers the window on the screen, initializes the start time, 
+        centers the window on the screen, initializes the start time,
         and sets up the UI.
         """
         super().__init__()
@@ -154,10 +154,6 @@ class LoginFormApp(QMainWindow):
         # Center the main window
         center_window(self)
 
-        
-        
-
-        
     def login(self):
         """
         Handle the login process for the user.

@@ -9,6 +9,7 @@ Modules:
     - PyQt5.QtWidgets.QDesktopWidget: Provides screen-related information and utilities.
     - PyQt5.QtWidgets.QMessageBox: Provides a dialog box to display messages to the user.
 """
+
 import os
 import platform
 import shutil
@@ -16,7 +17,9 @@ import csv
 import json
 from PyQt5.QtWidgets import QDesktopWidget
 from PyQt5.QtWidgets import QMessageBox
+
 # Additional code and function definitions go here
+
 
 def ensure_log_folder_exists(folder_path):
     """
@@ -33,6 +36,8 @@ def ensure_log_folder_exists(folder_path):
         print(f"Created log folder: {folder_path}")
     else:
         print(f"Log folder already exists: {folder_path}")
+
+
 def show_message_box(parent, icon_type, title, text):
     """
     Display a message box with specified icon, title, and text.
@@ -51,9 +56,12 @@ def show_message_box(parent, icon_type, title, text):
     msg_box.setWindowTitle(title)
     msg_box.setText(text)
     # Set standard buttons based on icon_type using a ternary operator
-    msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No) if icon_type == QMessageBox.Question else msg_box.setStandardButtons(QMessageBox.Ok)
+    (
+        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        if icon_type == QMessageBox.Question
+        else msg_box.setStandardButtons(QMessageBox.Ok)
+    )
     return msg_box.exec_()
-
 
 
 def center_window(window):
@@ -69,7 +77,6 @@ def center_window(window):
     window.move(qr.topLeft())
 
 
-
 def find_chrome_path():
     """
     Finds the path to the Google Chrome executable on the system.
@@ -83,8 +90,20 @@ def find_chrome_path():
     if system == "Windows":
         # Possible paths for Chrome on Windows
         chrome_paths = [
-            os.path.join(os.environ.get("ProgramFiles", "C:\\Program Files"), "Google", "Chrome", "Application", "chrome.exe"),
-            os.path.join(os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)"), "Google", "Chrome", "Application", "chrome.exe"),
+            os.path.join(
+                os.environ.get("ProgramFiles", "C:\\Program Files"),
+                "Google",
+                "Chrome",
+                "Application",
+                "chrome.exe",
+            ),
+            os.path.join(
+                os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)"),
+                "Google",
+                "Chrome",
+                "Application",
+                "chrome.exe",
+            ),
         ]
         # Check if Chrome exists at any of these paths
         return next((path for path in chrome_paths if os.path.exists(path)), None)
@@ -196,7 +215,7 @@ def convert_into_csv_and_save(json_data, out_put_csv):
     print("report_directory", report_directory)
 
     ensure_log_folder_exists(report_directory)
-    
+
     with open(out_put_csv, "w", newline="") as file:
         writer = csv.writer(file)
 
@@ -235,7 +254,6 @@ def check_json_length(json_data):
         return -1
 
 
-
 def load_stylesheet(file_path):
     """
     Loads and returns the contents of a stylesheet file.
@@ -249,5 +267,3 @@ def load_stylesheet(file_path):
     with open(file_path, "r") as file:
         stylesheet = file.read()
     return stylesheet
-
-
