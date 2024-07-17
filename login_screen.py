@@ -54,7 +54,7 @@ class LoginFormApp(QMainWindow):
         """
         super().__init__()
         self.setWindowTitle(APP_NAME)
-        self.setGeometry(500, 500, 800, 500)
+        self.setGeometry(500, 600, 1000, 500)
         center_window(self)
         self.start_time = time.time()  # Initialize start_time
         self.initUI()
