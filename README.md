@@ -28,13 +28,13 @@ bash setup.sh
 **Windows:**
 
 ```bash
-python.exe license_report_gen.py
+python.exe login_screen.py
 ```
 
 **Unix/MacOS/Linux:**
 
 ```bash
-python3 license_report_gen.py
+python3 login_screen.py
 ```
 
 # To create a windows executable ".exe" file.
@@ -44,7 +44,7 @@ pip install babel
 
 # Generates the exe file
 ```bash
-pyinstaller --onefile --hidden-import=babel.numbers --hidden-import=babel.localtime --icon=ReportIcon.ico  --windowed license_report_gen.py   
+pyinstaller --onefile --hidden-import=babel.numbers --hidden-import=babel.localtime --icon=ReportIcon.ico  --windowed login_screen.py  
 ```
 
 # Build the executable using the spec file

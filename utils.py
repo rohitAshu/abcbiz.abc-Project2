@@ -8,12 +8,21 @@ from PyQt5.QtWidgets import QMessageBox
 
 
 def show_message_box(parent, icon_type, title, text):
-    msg_box = QMessageBox(parent)
-    msg_box.setIcon(icon_type)
-    msg_box.setWindowTitle(title)
-    msg_box.setText(text)
-    msg_box.setStandardButtons(QMessageBox.Ok)
-    msg_box.exec_()
+    """
+    Display a message box with specified icon, title, and text.
+
+    Args:
+        parent (QWidget or None): Parent widget of the message box.
+        icon_type (QMessageBox.Icon): Icon type to display (e.g., QMessageBox.Information).
+        title (str): Title of the message box.
+        text (str): Text content of the message box.
+    """
+    msg_box = QMessageBox(parent)  # Create a QMessageBox with optional parent
+    msg_box.setIcon(icon_type)  # Set the icon type (e.g., Information, Warning)
+    msg_box.setWindowTitle(title)  # Set the title of the message box
+    msg_box.setText(text)  # Set the main text content of the message box
+    msg_box.setStandardButtons(QMessageBox.Ok)  # Set standard OK button
+    msg_box.exec_()  # Execute the message box and display it
 
 
 def center_window(window):
