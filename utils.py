@@ -7,22 +7,42 @@ from PyQt5.QtWidgets import QDesktopWidget
 from PyQt5.QtWidgets import QMessageBox
 
 
+def ensure_log_folder_exists(folder_path):
+    """
+    Ensure that the specified log folder exists. If it doesn't exist, create it.
+
+    Args:
+        folder_path (str): The path to the log folder.
+
+    Returns:
+        None
+    """
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path, exist_ok=True)
+        print(f"Created log folder: {folder_path}")
+    else:
+        print(f"Log folder already exists: {folder_path}")
 def show_message_box(parent, icon_type, title, text):
     """
     Display a message box with specified icon, title, and text.
 
     Args:
         parent (QWidget or None): Parent widget of the message box.
-        icon_type (QMessageBox.Icon): Icon type to display (e.g., QMessageBox.Information).
+        icon_type (QMessageBox.Icon): Icon type to display (e.g., QMessageBox.Information, QMessageBox.Question).
         title (str): Title of the message box.
         text (str): Text content of the message box.
+
+    Returns:
+        StandardButton: Button clicked by the user (QMessageBox.Yes or QMessageBox.No for question icon, QMessageBox.Ok for other icons).
     """
-    msg_box = QMessageBox(parent)  # Create a QMessageBox with optional parent
-    msg_box.setIcon(icon_type)  # Set the icon type (e.g., Information, Warning)
-    msg_box.setWindowTitle(title)  # Set the title of the message box
-    msg_box.setText(text)  # Set the main text content of the message box
-    msg_box.setStandardButtons(QMessageBox.Ok)  # Set standard OK button
-    msg_box.exec_()  # Execute the message box and display it
+    msg_box = QMessageBox(parent)
+    msg_box.setIcon(icon_type)
+    msg_box.setWindowTitle(title)
+    msg_box.setText(text)
+    # Set standard buttons based on icon_type using a ternary operator
+    msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No) if icon_type == QMessageBox.Question else msg_box.setStandardButtons(QMessageBox.Ok)
+    return msg_box.exec_()
+
 
 
 def center_window(window):
@@ -46,43 +66,21 @@ def find_chrome_path():
     Returns:
         str: The path to the Chrome executable if found, otherwise None.
     """
-    # Get the current operating system
-    system = platform.system()
+    system = platform.system()  # Get the current operating system
     print(f"system : {system}")
-
     # Handle Windows systems
     if system == "Windows":
         # Possible paths for Chrome on Windows
         chrome_paths = [
-            os.path.join(
-                os.environ["ProgramFiles"],
-                "Google",
-                "Chrome",
-                "Application",
-                "chrome.exe",
-            ),
-            os.path.join(
-                os.environ["ProgramFiles(x86)"],
-                "Google",
-                "Chrome",
-                "Application",
-                "chrome.exe",
-            ),
+            os.path.join(os.environ.get("ProgramFiles", "C:\\Program Files"), "Google", "Chrome", "Application", "chrome.exe"),
+            os.path.join(os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)"), "Google", "Chrome", "Application", "chrome.exe"),
         ]
         # Check if Chrome exists at any of these paths
-        for path in chrome_paths:
-            if os.path.exists(path):
-                return path
-
+        return next((path for path in chrome_paths if os.path.exists(path)), None)
     # Handle Linux systems
     elif system == "Linux":
         # Try to find Chrome using `shutil.which`
-        chrome_path = shutil.which("google-chrome")
-        if chrome_path is None:
-            # Fallback to a stable version if the default one isn't found
-            chrome_path = shutil.which("google-chrome-stable")
-        return chrome_path
-
+        return shutil.which("google-chrome") or shutil.which("google-chrome-stable")
     # Return None if Chrome is not found
     return None
 
@@ -90,26 +88,16 @@ def find_chrome_path():
 async def page_load(page, pageurl):
     """
     Loads a web page asynchronously using Puppeteer and checks the response status.
-
     Parameters:
     - page: Puppeteer page object.
-    - date (str): Date parameter to include in the URL query.
     - pageurl (str): Base URL for the web page.
-
     Returns:
     - bool: True if page loaded successfully, False otherwise.
     """
     # Navigate to the page and wait for DOM content to be loaded
     response = await page.goto(pageurl, waitUntil="domcontentloaded")
-    # Check response status
-    if response.status == 404:
-        print(f"Page not found: {pageurl}")
-        return False
-    elif response.status == 403:
-        print("403 Forbidden")
-        return False
-    else:
-        return True
+    # Check response status using ternary operators
+    return False if response.status in [404, 403] else True
 
 
 def print_the_output_statement(output, message):
@@ -196,10 +184,8 @@ def convert_into_csv_and_save(json_data, out_put_csv):
     report_directory = os.path.dirname(out_put_csv)
     print("report_directory", report_directory)
 
-    if not os.path.exists(report_directory):
-        os.makedirs(report_directory)
-        print(f"Created directory: {report_directory}")
-
+    ensure_log_folder_exists(report_directory)
+    
     with open(out_put_csv, "w", newline="") as file:
         writer = csv.writer(file)
 
@@ -235,3 +221,5 @@ def load_stylesheet(file_path):
     with open(file_path, "r") as file:
         stylesheet = file.read()
     return stylesheet
+
+

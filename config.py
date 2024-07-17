@@ -1,41 +1,32 @@
-from datetime import datetime
 import os
+from datetime import datetime
 from screeninfo import get_monitors
 
-# Apps COnfigrations
-# Constants for file naming and paths Save data
-APP_NAME = "abcbiz_report"
+from utils import ensure_log_folder_exists
 
-APP_BUTTON_NAME = "Login"
+# Constants used throughout the application
+APP_NAME = "abcbiz_report"  # Name of the application
+APP_BUTTON_NAME = "Login"  # Name of the login button
+REPORT_FOLDER = "Daily_Report"  # Folder where reports are stored
+FILE_TYPE = "csv"  # Type of the report files
+CURRENT_DATE = datetime.now()  # Current date and time
+FILE_NAME = "ABCGovtWebscrapping"  # Base name for the files
+LOG_TYPE = 'log'  # Type of log files
+LOG_FOLDER = 'log'  # Folder where log files are stored
+LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for the login page
+HEADLESS = True  # Flag for headless browser mode
 
+# Get the width and height of the primary monitor
+monitor = get_monitors()[0]
+WIDTH = monitor.width  # Width of the screen
+HEIGHT = monitor.height  # Height of the screen
 
-REPORT_FOLDER = "Daily_Report"
-FILE_TYPE = "csv"
-CURRENT_DATE = datetime.now()
-FILE_NAME = "ABCGovtWebscrapping"
-
-
-LOG_TYPE = 'log'
-
-LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for licensing reports
-
-
-# Headless
-HEADLESS = True  # Whether to run the app in headless mode (no GUI)
-# Screem COnfig
-WIDTH = get_monitors()[0].width
-HEIGHT = get_monitors()[0].height
-
-
-# Ensure the log folder exists
-log_folder = "log"
-os.makedirs(log_folder, exist_ok=True)
-
+ensure_log_folder_exists(LOG_FOLDER)
 
 # Function to write log entries directly to a file
 def log_entry(log_type, service_id, name, status):
     # Define the log file name within the log folder
-    log_filename = os.path.join(log_folder, f"logfile_{CURRENT_DATE.strftime('%Y-%m-%d_%H-%M-%S')}.{LOG_TYPE}")
+    log_filename = os.path.join(LOG_FOLDER, f"logfile_{CURRENT_DATE.strftime('%Y-%m-%d_%H-%M-%S')}.{LOG_TYPE}")
     # Check if the file already exists to write the header only once
     file_exists = os.path.isfile(log_filename)
 

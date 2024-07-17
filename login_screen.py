@@ -290,8 +290,8 @@ class LoginFormApp(QMainWindow):
                 self.scrap_data_button.setEnabled(True)
                 print("Invalid CSV file")
         else:
-            # Show a warning dialog if no file path is selected
-            QMessageBox.warning(self, "Validation Error", "Invalid CSV file")
+            show_message_box(
+                            self, QMessageBox.Critical, "error", "Invalid CSV file")
         # Calculate and log total execution time
         total_time = time.time() - self.start_time
         print_the_output_statement(
@@ -299,19 +299,43 @@ class LoginFormApp(QMainWindow):
         )
 
     def close_window(self):
-        """Close the application window."""
-        self.close()
+        """
+        Prompt the user with a confirmation message box to close the window.
+
+        If the user clicks 'Yes' in the confirmation message box, the window is closed.
+
+        Returns:
+            None
+        """
+        result = show_message_box(self, QMessageBox.Question, "Confirmation", "Are you sure you want to close the browser?")
+        if result == QMessageBox.Yes:
+            self.close()  # Close the window if user clicks 'Yes'
 
 
 def main():
-    """Main function to run the application."""
-    app = QApplication(sys.argv)
+    """
+    Main function to run the application.
 
-    css_file_path = os.path.join("css", "style.css")
-    app.setStyleSheet(load_stylesheet(css_file_path))
-    window = LoginFormApp()
-    window.show()
-    sys.exit(app.exec_())
+    Initializes the QApplication, sets the stylesheet, creates and shows the login form window,
+    and starts the application event loop.
+
+    Usage:
+        - Ensure 'css/style.css' exists for the stylesheet to be loaded correctly.
+        - Replace 'LoginFormApp' with your actual login form application class.
+
+    Returns:
+        None
+    """
+    app = QApplication(sys.argv)  # Create the QApplication instance
+
+    css_file_path = os.path.join("css", "style.css")  # Path to your stylesheet
+    app.setStyleSheet(load_stylesheet(css_file_path))  # Load and apply the stylesheet
+
+    window = LoginFormApp()  # Create an instance of your login form application
+    window.show()  # Show the login form window
+
+    sys.exit(app.exec_())  # Start the application event loop and exit when it's done
+    
 
 
 if __name__ == "__main__":
