@@ -15,6 +15,8 @@ CURRENT_DATE = datetime.now()
 FILE_NAME = "ABCGovtWebscrapping"
 
 
+LOG_TYPE = 'log'
+
 LOGINURL = "https://abcbiz.abc.ca.gov/login"  # URL for licensing reports
 
 
@@ -33,7 +35,7 @@ os.makedirs(log_folder, exist_ok=True)
 # Function to write log entries directly to a file
 def log_entry(log_type, service_id, name, status):
     # Define the log file name within the log folder
-    log_filename = os.path.join(log_folder, f"logfile_{CURRENT_DATE.strftime('%Y-%m-%d')}.txt")
+    log_filename = os.path.join(log_folder, f"logfile_{CURRENT_DATE.strftime('%Y-%m-%d_%H-%M-%S')}.{LOG_TYPE}")
     # Check if the file already exists to write the header only once
     file_exists = os.path.isfile(log_filename)
 
