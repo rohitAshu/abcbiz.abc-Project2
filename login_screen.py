@@ -148,7 +148,6 @@ class LoginFormApp(QMainWindow):
         self.output_text.setReadOnly(True)
         self.output_text.setFont(QFont("Arial", 12))  # Example: set font
         self.output_text.setFont(font)
-        self.output_text.setFixedSize(100, 200)  # Adjust width and height as needed
         self.output_text.setStyleSheet("""
             QTextEdit {
                 background-color: #ccf7ff;  /* Light blue background */
