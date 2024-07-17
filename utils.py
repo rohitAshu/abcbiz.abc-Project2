@@ -1,3 +1,14 @@
+"""
+This script provides utility functions and configurations for a PyQt-based GUI application. 
+Modules:
+    - os: Provides functions for interacting with the operating system.
+    - platform: Provides a way to access underlying platform’s data.
+    - shutil: Provides functions to operate on files and collections of files.
+    - csv: Provides functionality to read and write CSV files.
+    - json: Provides methods for parsing and creating JSON data.
+    - PyQt5.QtWidgets.QDesktopWidget: Provides screen-related information and utilities.
+    - PyQt5.QtWidgets.QMessageBox: Provides a dialog box to display messages to the user.
+"""
 import os
 import platform
 import shutil
@@ -5,7 +16,7 @@ import csv
 import json
 from PyQt5.QtWidgets import QDesktopWidget
 from PyQt5.QtWidgets import QMessageBox
-
+# Additional code and function definitions go here
 
 def ensure_log_folder_exists(folder_path):
     """
@@ -198,26 +209,43 @@ def convert_into_csv_and_save(json_data, out_put_csv):
 
 
 def check_json_length(json_data):
+    """
+    Returns the length of a JSON object (dict or list).
+    Args:
+        json_data (str or dict): JSON string or parsed JSON object.
+
+    Returns:
+        int: Length of the JSON object, or -1 if invalid.
+    """
     try:
         if isinstance(json_data, str):
-            json_obj = json.loads(json_data)  # Parse JSON string to a Python object
+            json_obj = json.loads(json_data)
         elif isinstance(json_data, dict):
-            json_obj = json_data  # Use directly if already a parsed JSON object
+            json_obj = json_data
         else:
-            return -1  # Invalid JSON data type
+            return -1
 
-        # Check length based on whether it's a list or dict
         if isinstance(json_obj, (list, dict)):
             return len(json_obj)
         else:
-            return -1  # Not a valid JSON structure (should be list or dict)
+            return -1
 
     except ValueError as e:
         print(f"ValueError: {e}")
-        return -1  # JSON parsing error
+        return -1
+
 
 
 def load_stylesheet(file_path):
+    """
+    Loads and returns the contents of a stylesheet file.
+
+    Args:
+        file_path (str): Path to the stylesheet file.
+
+    Returns:
+        str: The contents of the stylesheet file.
+    """
     with open(file_path, "r") as file:
         stylesheet = file.read()
     return stylesheet

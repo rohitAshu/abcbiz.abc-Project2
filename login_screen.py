@@ -1,3 +1,24 @@
+"""
+This script initializes and runs a PyQt-based GUI application for web scraping and data handling.
+
+Modules:
+    - config: Configuration settings for the application.
+    - scrapping: Module for web scraping functionalities.
+    - time: Provides time-related functions.
+    - json: Provides methods for parsing and creating JSON data.
+    - sys: Provides access to system-specific parameters and functions.
+    - asyncio: Provides support for asynchronous programming.
+    - PyQt5.QtWidgets: Provides GUI elements for the application.
+    - PyQt5.QtCore: Provides core non-GUI functionality for PyQt applications.
+    - utils: Utility functions for various tasks, including window centering, JSON handling, CSV conversion, stylesheet loading, output printing, and message box display.
+"""
+
+from config import *
+import scrapping  # Ensure scrapping is imported correctly
+import time
+import json
+import sys
+import asyncio
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -11,14 +32,8 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QTextEdit,
 )
-import sys
-import asyncio
 from PyQt5.QtCore import Qt
-
-from config import *
-import scrapping  # Make sure scrapping is imported correctly
-import time
-import json
+from PyQt5.QtGui import QFont
 from utils import (
     center_window,
     check_json_length,
@@ -32,6 +47,11 @@ from utils import (
 
 class LoginFormApp(QMainWindow):
     def __init__(self):
+        """
+        Initializes the main window, sets the window title and geometry,
+        centers the window on the screen, initializes the start time, 
+        and sets up the UI.
+        """
         super().__init__()
         self.setWindowTitle(APP_NAME)
         self.setGeometry(500, 500, 800, 500)
@@ -40,65 +60,112 @@ class LoginFormApp(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        """
+        Sets up the user interface of the main window.
+
+        This method creates labels, input fields for username and password,
+        login and close buttons, upload CSV and scrap data buttons, and an output text area.
+
+        Signals are connected for login, close, upload CSV, and scrap data buttons.
+        """
         print("initUI call")
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+
+        # Create vertical layout for central widget
         layout = QVBoxLayout()
-        central_widget.setLayout(layout)
-        app_title_label = QLabel("<h1>ABCGovtWebscrapping</h1>")
+        # Application title label
+        app_title_label = QLabel(f"<h1> {APP_NAME}</h1>")
         app_title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(app_title_label)
 
-        heading_label = QLabel("<h2>Login Form</h2>")
-        heading_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(heading_label)
+        central_widget.setLayout(layout)
 
-        # FORM
-        # Creating form layout for username and password
+        font = QFont()
+        font.setBold(True)
+
+        # Form layout for username and password
         form_layout = QVBoxLayout()
+        form_layout.addSpacing(20)
         layout.addLayout(form_layout)
 
+        # Username Label
+        form_layout.addWidget(QLabel("<b>Enter the username and email address:</b>"))
+        # Username Input Field
         self.username_field = QLineEdit()
+        self.username_field.setPlaceholderText("Enter the username and email address")
+        self.username_field.setFont(font)
+        self.username_field.setStyleSheet("height: 20px;")  # Example: increase height
+        form_layout.addWidget(self.username_field)
+
+        # Password Label
+        form_layout.addWidget(QLabel("<b>Enter the password:</b>"))
+        # Password Input Field
         self.password_field = QLineEdit()
         self.password_field.setEchoMode(QLineEdit.Password)
-
-        form_layout.addWidget(QLabel("Username:"))
-        form_layout.addWidget(self.username_field)
-        form_layout.addWidget(QLabel("Password:"))
+        self.password_field.setStyleSheet("height: 20px;")  # Example: increase height
+        self.password_field.setPlaceholderText("Enter the password")
+        self.password_field.setFont(font)
         form_layout.addWidget(self.password_field)
 
-        # Creating button layout for login and close buttons
+        # Button layout for login and close buttons
         button_layout = QHBoxLayout()
         form_layout.addLayout(button_layout)
 
+        # Login Button Layout
         self.login_button = QPushButton("Login")
-        self.close_button = QPushButton("Close")
         self.login_button.clicked.connect(self.login)
-        self.close_button.clicked.connect(self.close_window)
-
+        self.login_button.setFont(font)
         button_layout.addWidget(self.login_button)
+
+        # Close Button Layout
+        self.close_button = QPushButton("Close")
+        self.close_button.clicked.connect(self.close_window)
+        self.close_button.setFont(font)
         button_layout.addWidget(self.close_button)
 
-        # Creating a separate button layout for upload and scrap data buttons
+        # Separate button layout for upload CSV and scrap data buttons
         bottom_button_layout = QHBoxLayout()
         layout.addLayout(bottom_button_layout)
 
+        # Upload CSV Button Style and Design
         self.upload_csv_button = QPushButton("Upload CSV")
         self.upload_csv_button.setEnabled(False)
+        self.upload_csv_button.clicked.connect(self.upload_csv)
+        self.upload_csv_button.setFont(font)
+        bottom_button_layout.addWidget(self.upload_csv_button)
+
+        # Scrap Data Button Style and Design
         self.scrap_data_button = QPushButton("Scrap Data")
         self.scrap_data_button.setEnabled(False)
-        self.upload_csv_button.clicked.connect(self.upload_csv)
         self.scrap_data_button.clicked.connect(self.scrap_data_button_clicked)
-
-        bottom_button_layout.addWidget(self.upload_csv_button)
+        self.scrap_data_button.setFont(font)
         bottom_button_layout.addWidget(self.scrap_data_button)
 
-        # Adding output text area
+        # Output text
+        layout.addWidget(QLabel("<b>Output:</b>"))
         self.output_text = QTextEdit()
         self.output_text.setReadOnly(True)
-        layout.addWidget(QLabel("Output:"))
+        self.output_text.setFont(QFont("Arial", 12))  # Example: set font
+        self.output_text.setFont(font)
+        self.output_text.setFixedSize(100, 200)  # Adjust width and height as needed
+        self.output_text.setStyleSheet("""
+            QTextEdit {
+                background-color: #ccf7ff;  /* Light blue background */
+                border: 1px solid #B0C4DE;  /* Light steel blue border */
+                padding: 5px;  /* Padding inside the widget */
+            }
+        """)
+        self.output_text.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         layout.addWidget(self.output_text)
 
+        # Center the main window
+        center_window(self)
+
+        
+        
+
+        
     def login(self):
         """
         Handle the login process for the user.
@@ -154,11 +221,8 @@ class LoginFormApp(QMainWindow):
                 print("Invalid Login Details")
 
     def scrap_data(self, file_path):
-
         print("Scraping data...")
         print(file_path)
-        # Add your scraping or processing logic here
-        # Example: Display file path in output_text
         self.output_text.append(f"Scraping data from: {file_path}")
 
     def upload_csv(self):
