@@ -5,6 +5,7 @@ from screeninfo import get_monitors
 from utils import ensure_log_folder_exists
 
 # Constants used throughout the application
+APP_TITLE = "ABC Business Online Portal"  # Name of the application
 APP_NAME = "ABC Business Online Portal"  # Name of the application
 APP_BUTTON_NAME = "Login"  # Name of the login button
 REPORT_FOLDER = "Daily_Report"  # Folder where reports are stored

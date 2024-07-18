@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from config import *
 from utils import print_the_output_statement, page_load
 from webdriver import pyppeteerBrowserInit
@@ -53,104 +54,100 @@ async def abiotic_login(
     await stealth(page)
     await page.setViewport({"width": WIDTH, "height": HEIGHT})
     await page.setUserAgent(user_agent)
-    Response = ""
+    Response =[]
+    # return True, Response, browser, page
     try:
         print_the_output_statement(output_text, f"Logging in to the website {LOGINURL}")
         load_page = await page_load(page, LOGINURL)
+        print('load_page',load_page)
         if load_page:
-            print(f"Page loaded successfully")
             await asyncio.sleep(7)
-            # Perform login
-            username_xpath = '//*[@id="username"]'
-            await page.waitForXPath(username_xpath)
-            username_element = await page.xpath(username_xpath)
-            print(f"username_element  found: {username_element}")
-            await username_element[0].type(username)
-            print(f"Enter the username with type {username}")
-            await asyncio.sleep(3)
-            password_xpath = '//*[@id="password"]'
-            await page.waitForXPath(password_xpath)
-            password_element = await page.xpath(password_xpath)
-            # await password_element[0].type('19MichaelBrewer68!')
-            await password_element[0].type(password)
-            print(f'Enter the password with secure password {"*" * len(password)}')
-            await asyncio.sleep(3)
-            login_button_xpath = '//*[@id="root"]/div/div[3]/div/div/div[2]/div[1]/form/div[1]/button/span[1]'
-            await page.waitForXPath(login_button_xpath)
-            login_button_element = await page.xpath(login_button_xpath)
-            await login_button_element[0].click()
-            print("Clicked the login button...")
-            await asyncio.sleep(7)
-            popup_xpath = (
-                '//*[@role="alertdialog"]'  # XPath for the popup message container
-            )
-            popup_element = await page.xpath(popup_xpath)
-            print("popup_element", popup_element)
-            if popup_element:
-                popup_text = await (
-                    await popup_element[0].getProperty("textContent")
-                ).jsonValue()
-                print(
-                    "Popup Message:", popup_text.strip()
-                )  # Print and handle the popup message text
-                print_the_output_statement(output_text, popup_text.strip())
-                return False, popup_text.strip(), browser, page
+            # Select the element using XPath
+            element_404_error = await page.xpath('//span[@style="margin-left: 450px; margin-top: 120px; font-size: 120px; color: rgb(122, 124, 125); font-weight: 900; display: inline; position: absolute;"]')
+            print(f"element_404_error  found: {element_404_error}")
+            if element_404_error:
+                text = 'Internal Error Occurred while running application. Please Try Again!!'
+                return False, text, '', ''
             else:
-                # Perform further actions after login (example: clicking a button)
-                target_button_xpath = '//*[@id="root"]/div/div[3]/div/div[2]/div[1]/h1/div[2]/div/button/span/span'
-                await page.waitForXPath(target_button_xpath)
-                target_button_element = await page.xpath(target_button_xpath)
-                await target_button_element[0].click()
-                await asyncio.sleep(5)
-                print("nexe button .....1")
-                target_element_xpath = '//*[@id="long-menu"]/div[2]/ul/li'
-                await page.waitForXPath(target_element_xpath)
-                target_element = await page.xpath(target_element_xpath)
-                await target_element[0].click()
-                await asyncio.sleep(15)
-                print("nexe button .....2")
-        Response = f"Login Successfully with username={username}"
+                # Username Elements 
+                username_xpath = '//*[@id="username"]'
+                await page.waitForXPath(username_xpath)
+                username_element = await page.xpath(username_xpath)
+                print(f"username_element  found: {username_element}")
+                await username_element[0].type(username)
+                print(f"Enter the username with type {username}")
+                await asyncio.sleep(3)
+                password_xpath = '//*[@id="password"]'
+                await page.waitForXPath(password_xpath)
+                password_element = await page.xpath(password_xpath)
+                # await password_element[0].type('19MichaelBrewer68!')
+                await password_element[0].type(password)
+                print(f'Enter the password with secure password {"*" * len(password)}')
+                await asyncio.sleep(3)
+                login_button_xpath = '//*[@id="root"]/div/div[3]/div/div/div[2]/div[1]/form/div[1]/button/span[1]'
+                await page.waitForXPath(login_button_xpath)
+                login_button_element = await page.xpath(login_button_xpath)
+                await login_button_element[0].click()
+                print("Clicked the login button...")
+                await asyncio.sleep(7)
+                popup_xpath = ('//*[@role="alertdialog"]')
+                popup_element = await page.xpath(popup_xpath)
+                print("popup_element", popup_element)
+                if popup_element:
+                    popup_text = await ( await popup_element[0].getProperty("textContent") ).jsonValue()
+                    return False, popup_text, '', ''
+                else:
+                                    # Perform further actions after login (example: clicking a button)
+                    target_button_xpath = '//*[@id="root"]/div/div[3]/div/div[2]/div[1]/h1/div[2]/div/button/span/span'
+                    await page.waitForXPath(target_button_xpath)
+                    target_button_element = await page.xpath(target_button_xpath)
+                    await target_button_element[0].click()
+                    await asyncio.sleep(5)
+                    print("nexe button .....1")
+                    target_element_xpath = '//*[@id="long-menu"]/div[2]/ul/li'
+                    await page.waitForXPath(target_element_xpath)
+                    target_element = await page.xpath(target_element_xpath)
+                    await target_element[0].click()
+                    await asyncio.sleep(10)
+                    print("nexe button .....2")
+                    Response = f"Login Successfully with username={username}"
+                    
+                    return True, Response, browser, page
+        else:
+            text = 'Internal Error Occurred while running application. Please Try Again!!'
+            return False, text, '', ''
     except PyppeteerTimeoutError as timeout_error:
         print(f"timeout_error {timeout_error}")
     except pyppeteer.errors.NetworkError as NetworkError:
         print(f"NetworkError {NetworkError}")
     except Exception as e:
-        print(f"NetworkError {e}")
-    print_the_output_statement(output_text, Response)
-    return True, Response, browser, page
+        # Handle exceptions gracefully
+        print(f"Exception occurred during login: {e}")
+        print_the_output_statement(output_text, f"Login Process Failed: {str(e)}")
 
 
-async def scrapping_data(browser=None, page=None, resource=None, output_text=None):
-    """
-    Scrape data from the ABC Biz website based on the provided resource details.
-
-    Args:
-        browser (object): Browser instance.
-        page (object): Page instance.
-        resource (list): List of records containing service numbers and last names.
-        output_text (function): Function to handle output text display.
-
-    Returns:
-        tuple: A tuple containing success status (bool) and response data (str or dict).
-    """
-    Response = ""
+async def scrapping_data(browser, page, json_data , output_text):
+    print('scrapping_data')
+    Response = []
+    json_object = json.loads(json_data)
+    print('json_object', json_object)
     try:
-        if len(resource) > 0:
-            for record in resource:
-                service_number = record["service_number"]
-                last_name = record["last_name"]
+        for record in json_object:
+                service_number = record["Server_ID"]
+                print('service_number', service_number)
+                last_name = record["Last_Name"]
+                print('last_name', last_name)
+                
                 if service_number and last_name:
-                    print(
-                        f"scrapping of the data {service_number} and last name {last_name}"
-                    )
+                    print( f"scrapping of the data {service_number} and last name {last_name}")
                     last_name_xpath = '//*[@id="lastName"]'
                     await page.waitForXPath('//*[@id="serverId"]')
                     await page.waitForXPath(last_name_xpath)
                     server_id_element = await page.xpath('//*[@id="serverId"]')
                     print("server_id_element", server_id_element)
-                    await server_id_element[0].type(service_number)
+                    await server_id_element[0].type(str(service_number))
                     print(
-                        f"enter the service id...........!  {service_number}",
+                        f"enter the service id...........!  {str(service_number)}",
                     )
                     last_name_element = await page.xpath(last_name_xpath)
                     print("last_name_element", last_name_element)
@@ -189,7 +186,7 @@ async def scrapping_data(browser=None, page=None, resource=None, output_text=Non
                             "ERROR",
                             service_number,
                             last_name,
-                            f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}",
+                            f"No data found",
                         )
                         print(
                             f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}",
@@ -225,7 +222,7 @@ async def scrapping_data(browser=None, page=None, resource=None, output_text=Non
                             table_data["lastName"] = (
                                 last_name  # Replace with actual last name
                             )
-                            Response = table_data
+                            Response.append(table_data)
                     await page.waitForXPath(
                         '//button[contains(@class, "search-box-container_action-clear")]'
                     )
@@ -236,15 +233,8 @@ async def scrapping_data(browser=None, page=None, resource=None, output_text=Non
                     print("clear_button", clear_button)
                     await clear_button[0].click()
                     print("clear_button is clicked ")
-                    # await page.screenshot(
-                    #     {"path": f"example_{random.randint(1, 100)}.png"}
-                    # )
-                    print(f"Service Number: {service_number}, Last Name: {last_name}")
                 else:
-                    print("Please enter the vaid service number nad last name  ")
-        else:
-            return False, "Please enter the vaid service number nad last nam"
-
+                    print('error')
     except PyppeteerTimeoutError as timeout_error:
         print(f"timeout_error {timeout_error}")
     except pyppeteer.errors.NetworkError as NetworkError:
