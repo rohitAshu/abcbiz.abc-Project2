@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QDesktopWidget
 from PyQt5.QtWidgets import QMessageBox
 import pandas as pd
 
+
 def create_directory(folder_path):
     """
     Ensure that the specified log folder exists. If it doesn't exist, create it.
@@ -74,20 +75,40 @@ def find_chrome_path():
     # Handle Windows systems
     if system == "Windows":
         possible_paths = [
-            os.path.join(os.environ.get("ProgramFiles", "C:\\Program Files"), "Google", "Chrome", "Application", "chrome.exe"),
-            os.path.join(os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)"), "Google", "Chrome", "Application", "chrome.exe"),
+            os.path.join(
+                os.environ.get("ProgramFiles", "C:\\Program Files"),
+                "Google",
+                "Chrome",
+                "Application",
+                "chrome.exe",
+            ),
+            os.path.join(
+                os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)"),
+                "Google",
+                "Chrome",
+                "Application",
+                "chrome.exe",
+            ),
         ]
 
         # Windows 10 and 11 might have additional installation paths
         windows_specific_paths = [
-            os.path.join(os.environ.get("LOCALAPPDATA", "C:\\Users\\%USERNAME%\\AppData\\Local"), "Google\\Chrome\\Application\\chrome.exe"),
-            os.path.join(os.environ.get("APPDATA", "C:\\Users\\%USERNAME%\\AppData\\Roaming"), "Google\\Chrome\\Application\\chrome.exe"),
+            os.path.join(
+                os.environ.get("LOCALAPPDATA", "C:\\Users\\%USERNAME%\\AppData\\Local"),
+                "Google\\Chrome\\Application\\chrome.exe",
+            ),
+            os.path.join(
+                os.environ.get("APPDATA", "C:\\Users\\%USERNAME%\\AppData\\Roaming"),
+                "Google\\Chrome\\Application\\chrome.exe",
+            ),
         ]
         possible_paths.extend(windows_specific_paths)
 
         # Check if Chrome exists at any of these paths
-        chrome_path = next((path for path in possible_paths if os.path.exists(path)), None)
-        
+        chrome_path = next(
+            (path for path in possible_paths if os.path.exists(path)), None
+        )
+
         # Example temporary directory (adjust according to your use case)
         temp_dir = os.path.join(os.environ.get("TEMP", "C:\\Temp"), "chrome_temp")
 
@@ -102,7 +123,9 @@ def find_chrome_path():
 
     # Handle Linux systems (Ubuntu)
     elif system == "Linux":
-        chrome_path = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
+        chrome_path = shutil.which("google-chrome") or shutil.which(
+            "google-chrome-stable"
+        )
         if chrome_path:
             return chrome_path
 
@@ -112,7 +135,9 @@ def find_chrome_path():
             "/usr/bin/google-chrome-stable",
             "/opt/google/chrome/google-chrome",
         ]
-        return next((path for path in linux_specific_paths if os.path.exists(path)), None)
+        return next(
+            (path for path in linux_specific_paths if os.path.exists(path)), None
+        )
 
     # Return None if Chrome is not found
     return None
@@ -133,8 +158,6 @@ def print_the_output_statement(output, message):
 
 
 def convert_into_csv_and_save(json_data, out_put_csv):
-    
-
 
     report_directory = os.path.dirname(out_put_csv)
     print("report_directory", report_directory)
@@ -142,8 +165,11 @@ def convert_into_csv_and_save(json_data, out_put_csv):
     create_directory(report_directory)
     print(json_data)
     df = pd.DataFrame(json_data)
-    df.to_csv(out_put_csv, index=False)  # Set index=False to exclude DataFrame index in the CSV output
-    print(f'json to csv converted successfully with the {out_put_csv} ')
+    df.to_csv(
+        out_put_csv, index=False
+    )  # Set index=False to exclude DataFrame index in the CSV output
+    print(f"json to csv converted successfully with the {out_put_csv} ")
+
 
 def load_stylesheet(file_path):
     with open(file_path, "r") as file:
@@ -153,23 +179,25 @@ def load_stylesheet(file_path):
 
 # Additional code and function definitions go here
 
+
 def xlsx_to_json(xlsx_file_path):
     # Read the Excel file
     df = pd.read_excel(xlsx_file_path)
-    
+
     # Convert the DataFrame to a dictionary
-    data_dict = df.to_dict(orient='records')
-    
+    data_dict = df.to_dict(orient="records")
+
     # Convert the dictionary to a JSON string
     json_data = json.dumps(data_dict, indent=4)
-    
+
     # Get the total number of rows
     num_records = len(df)
-    
+
     # Get the list of headers
     header_columns = list(df.columns)
-    
+
     return header_columns, json_data, num_records
+
 
 def parse_json(json_string):
     try:

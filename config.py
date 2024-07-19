@@ -66,10 +66,6 @@ START_TIME = time.time()
 # Timestamp for tracking the start time of operations
 
 
-
-
-
-
 # Function to write log entries directly to a file
 def log_entry(log_type, service_id, name, status):
     # Define the log file name within the log folder

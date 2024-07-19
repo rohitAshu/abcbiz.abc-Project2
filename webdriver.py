@@ -18,19 +18,18 @@ def pyppeteerBrowserInit(loop):
                 executablePath=executable_path,
                 headless=HEADLESS,
                 args=[
-                 "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-infobars",
-                f"--user-agent={user_agent}" 
-                "--disable-dev-shm-usage",
-                "--disable-accelerated-2d-canvas",
-                "--disable-gpu",
-                f"--window-size={WIDTH},{HEIGHT}",
-                "--start-maximized",
-                "--disable-notifications",
-                "--disable-popup-blocking",
-                "--ignore-certificate-errors",
-                "--allow-file-access",
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-infobars",
+                    f"--user-agent={user_agent}" "--disable-dev-shm-usage",
+                    "--disable-accelerated-2d-canvas",
+                    "--disable-gpu",
+                    f"--window-size={WIDTH},{HEIGHT}",
+                    "--start-maximized",
+                    "--disable-notifications",
+                    "--disable-popup-blocking",
+                    "--ignore-certificate-errors",
+                    "--allow-file-access",
                 ],
             )
         )
@@ -38,4 +37,4 @@ def pyppeteerBrowserInit(loop):
     except Exception as e:
         # Print the error and return None if an exception occurs
         print(f"Error initializing browser: {e}")
-        return None,None
+        return None, None

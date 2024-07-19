@@ -11,14 +11,15 @@ from scrapping import abiotic_login, scrapping_data
 from utils import *
 from webdriver import pyppeteerBrowserInit
 
+
 class Worker(QObject):
     """
     Worker class for handling asynchronous tasks in a separate thread.
-    
-    This class is responsible for managing login and scraping operations using asyncio. 
+
+    This class is responsible for managing login and scraping operations using asyncio.
     It emits signals upon the completion of these operations to communicate results back to the main thread.
     """
-    
+
     login_finished = pyqtSignal(bool, str)
     """
     Signal emitted when the login operation is finished.
@@ -27,7 +28,7 @@ class Worker(QObject):
         - status (bool): Indicates whether the login was successful.
         - LoginStatus (str): A status message or information about the login operation.
     """
-    
+
     scrapping_finished = pyqtSignal(bool, list)
     """
     Signal emitted when the scraping operation is finished.
@@ -36,17 +37,26 @@ class Worker(QObject):
         - status (bool): Indicates whether the scraping was successful.
         - scrapping_status (list): A list containing information or results from the scraping operation.
     """
-    
+
     def __init__(self):
         """
         Initializes the Worker instance.
         """
         super().__init__()
 
-    def run_login_thread(self, loop, browser, user_agent, username, password, output_text, scrape_thread_event):
+    def run_login_thread(
+        self,
+        loop,
+        browser,
+        user_agent,
+        username,
+        password,
+        output_text,
+        scrape_thread_event,
+    ):
         """
         Runs the login operation in the given asyncio event loop.
-        
+
         This method sets the event loop, performs the login operation asynchronously,
         and emits the login_finished signal with the result.
 
@@ -61,14 +71,18 @@ class Worker(QObject):
         """
         asyncio.set_event_loop(loop)
         global page
-        status, LoginStatus, browser, page = loop.run_until_complete(abiotic_login(browser, user_agent, username, password, output_text))
+        status, LoginStatus, browser, page = loop.run_until_complete(
+            abiotic_login(browser, user_agent, username, password, output_text)
+        )
         self.login_finished.emit(status, LoginStatus)
         scrape_thread_event.set()
 
-    def run_scrapp_thread(self, loop, browser, page, json_data_str, output_text, scrape_thread_event):
+    def run_scrapp_thread(
+        self, loop, browser, page, json_data_str, output_text, scrape_thread_event
+    ):
         """
         Runs the scraping operation in the given asyncio event loop.
-        
+
         This method sets the event loop, performs the scraping operation asynchronously,
         and emits the scrapping_finished signal with the result.
 
@@ -81,7 +95,9 @@ class Worker(QObject):
             - scrape_thread_event (threading.Event): Event object to signal the completion of the scraping operation.
         """
         asyncio.set_event_loop(loop)
-        status, scrapping_status = loop.run_until_complete(scrapping_data(browser, page, json_data_str, output_text))
+        status, scrapping_status = loop.run_until_complete(
+            scrapping_data(browser, page, json_data_str, output_text)
+        )
         self.scrapping_finished.emit(status, scrapping_status)
         scrape_thread_event.set()
 
@@ -100,6 +116,7 @@ class MainWindow(QMainWindow):
         scrap_data_button (QPushButton): Button to start data scraping.
         output_text (QTextEdit): Widget to display output and status messages.
     """
+
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -118,10 +135,10 @@ class MainWindow(QMainWindow):
         app_title_label = QLabel(f"<h1>{APP_NAME}</h1>")
         app_title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(app_title_label)
-        # IMplementation the Fonts 
+        # IMplementation the Fonts
         font = QFont()
         font.setBold(True)
-        # Form Layout 
+        # Form Layout
         form_layout = QVBoxLayout()
         form_layout.addSpacing(20)
         layout.addLayout(form_layout)
@@ -132,7 +149,7 @@ class MainWindow(QMainWindow):
         self.username_field.setFont(font)
         self.username_field.setStyleSheet("height: 20px;")
         form_layout.addWidget(self.username_field)
-        # added teh Form layout for  password 
+        # added teh Form layout for  password
         form_layout.addWidget(QLabel("<b>Enter the password:</b>"))
         self.password_field = QLineEdit()
         self.password_field.setEchoMode(QLineEdit.Password)
@@ -143,7 +160,7 @@ class MainWindow(QMainWindow):
 
         button_layout = QHBoxLayout()
         form_layout.addLayout(button_layout)
-        # added Button Layout for Login 
+        # added Button Layout for Login
         self.login_button = QPushButton("Login")
         self.login_button.setFont(font)
         self.login_button.clicked.connect(self.login_function)
@@ -175,8 +192,6 @@ class MainWindow(QMainWindow):
         self.output_text.setFont(QFont("Arial", 12))
         layout.addWidget(self.output_text)
 
-
-
     def login_function(self):
         """
         Handles the login process by retrieving user input and starting a worker thread to perform the login.
@@ -189,7 +204,12 @@ class MainWindow(QMainWindow):
         self.scrap_data_button.setEnabled(False)
 
         if username == "" or password == "":
-            show_message_box(self, QMessageBox.Warning, "Validation Error", "Please enter the username and password")
+            show_message_box(
+                self,
+                QMessageBox.Warning,
+                "Validation Error",
+                "Please enter the username and password",
+            )
             self.login_button.setEnabled(True)
         else:
             global browser, user_agent
@@ -200,7 +220,15 @@ class MainWindow(QMainWindow):
 
             scrape_thread = Thread(
                 target=self.worker.run_login_thread,
-                args=(NEW_EVENT_LOOP, browser, user_agent, username, password, self.output_text, THREAD_EVENT)
+                args=(
+                    NEW_EVENT_LOOP,
+                    browser,
+                    user_agent,
+                    username,
+                    password,
+                    self.output_text,
+                    THREAD_EVENT,
+                ),
             )
             scrape_thread.start()
 
@@ -222,19 +250,20 @@ class MainWindow(QMainWindow):
         end_time = time.time()
         total_time = end_time - START_TIME
         print_the_output_statement(
-            self.output_text, f"Total execution time for login : {total_time:.2f} seconds"
+            self.output_text,
+            f"Total execution time for login : {total_time:.2f} seconds",
         )
-    
-
 
     def upload_excel(self):
         """
         Opens a file dialog for the user to select an Excel file, then enables the scraping button.
         """
-        print_the_output_statement( self.output_text, f"Uploading Excel..." )
+        print_the_output_statement(self.output_text, f"Uploading Excel...")
         options = QFileDialog.Options()
         global file_path
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select File Name", "", "Excel Files (*.xlsx)", options=options)
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select File Name", "", "Excel Files (*.xlsx)", options=options
+        )
         if file_path:
             self.file_path = file_path  # Store file_path in instance variable
             self.scrap_data_button.setEnabled(True)  # Enable Scrap Data button
@@ -259,27 +288,47 @@ class MainWindow(QMainWindow):
             scrapping_status (list): Status messages related to scraping.
         """
         if status:
-            print_the_output_statement( self.output_text, f"Scraping completed.")
+            print_the_output_statement(self.output_text, f"Scraping completed.")
             options = QFileDialog.Options()
-            folder_path = QFileDialog.getExistingDirectory( self, "Select Directory", options=options)
+            folder_path = QFileDialog.getExistingDirectory(
+                self, "Select Directory", options=options
+            )
             if folder_path:
                 outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
                 print("outputfile", outputfile)
                 convert_into_csv_and_save(scrapping_status, outputfile)
-                print_the_output_statement(self.output_text,f"Data saved successfully to {outputfile}")
-                show_message_box(self,QMessageBox.NoIcon, "success", f"Data saved successfully to {outputfile}")
+                print_the_output_statement(
+                    self.output_text, f"Data saved successfully to {outputfile}"
+                )
+                show_message_box(
+                    self,
+                    QMessageBox.NoIcon,
+                    "success",
+                    f"Data saved successfully to {outputfile}",
+                )
             else:
-                show_message_box( self, QMessageBox.Warning,"error", "data successfully found succssfully but failed to the saved the data" )
+                show_message_box(
+                    self,
+                    QMessageBox.Warning,
+                    "error",
+                    "data successfully found succssfully but failed to the saved the data",
+                )
             self.upload_csv_button.setEnabled(False)
             self.scrap_data_button.setEnabled(False)
             self.login_button.setEnabled(True)
         else:
-            show_message_box(self, QMessageBox.Warning, "Browser Error", 'Internal Error Occurred while running application. Please Try Again!!')
+            show_message_box(
+                self,
+                QMessageBox.Warning,
+                "Browser Error",
+                "Internal Error Occurred while running application. Please Try Again!!",
+            )
         self.login_button.setEnabled(True)
         end_time = time.time()
         total_time = end_time - START_TIME
         print_the_output_statement(
-            self.output_text, f"Total execution time for Scrapping : {total_time:.2f} seconds"
+            self.output_text,
+            f"Total execution time for Scrapping : {total_time:.2f} seconds",
         )
 
     def scrap_data_button_clicked(self):
@@ -293,36 +342,56 @@ class MainWindow(QMainWindow):
             csv_header, json_data_str, num_records = xlsx_to_json(file_path)
             if num_records > 0:
                 print("json data is found")
-                missing_headers = [ header for header in ["Server_ID", "Last_Name"] if header not in csv_header]
+                missing_headers = [
+                    header
+                    for header in ["Server_ID", "Last_Name"]
+                    if header not in csv_header
+                ]
                 if missing_headers:
-                    print('missing the headers ')
+                    print("missing the headers ")
                     self.upload_csv_button.setEnabled(True)
                     self.scrap_data_button.setEnabled(False)
-                    show_message_box(self, QMessageBox.Warning,"File Error", "missing the header in the csv please choose the correct excel file")
+                    show_message_box(
+                        self,
+                        QMessageBox.Warning,
+                        "File Error",
+                        "missing the header in the csv please choose the correct excel file",
+                    )
                 else:
-                    print('missing the headers ')
+                    print("missing the headers ")
                     self.worker = Worker()
                     self.worker.scrapping_finished.connect(self.on_scrapping_finished)
                     scrape_thread = Thread(
                         target=self.worker.run_scrapp_thread,
-                        args=(NEW_EVENT_LOOP, browser, page, json_data_str,  self.output_text, THREAD_EVENT)
+                        args=(
+                            NEW_EVENT_LOOP,
+                            browser,
+                            page,
+                            json_data_str,
+                            self.output_text,
+                            THREAD_EVENT,
+                        ),
                     )
                     scrape_thread.start()
             else:
                 self.upload_csv_button.setEnabled(True)
                 self.scrap_data_button.setEnabled(False)
                 print("json data is not Found")
-                show_message_box(self, QMessageBox.Warning,"File Error", "excel is empty please choose another execel sheet",)
+                show_message_box(
+                    self,
+                    QMessageBox.Warning,
+                    "File Error",
+                    "excel is empty please choose another execel sheet",
+                )
 
         else:
-           
-           show_message_box(
+
+            show_message_box(
                 self,
                 QMessageBox.Warning,
                 "File Error",
                 "unable to scapp data",
-            ) 
-
+            )
 
     def closed_browser(self):
         """
@@ -336,6 +405,7 @@ class MainWindow(QMainWindow):
         )
         if result == QMessageBox.Yes:
             self.close()  # Close the window if user clicks 'Yes'
+
 
 if __name__ == "__main__":
     QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
