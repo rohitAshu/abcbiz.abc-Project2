@@ -66,10 +66,12 @@ START_TIME = time.time()
 # Timestamp for tracking the start time of operations
 
 
+create_directory(LOG_FOLDER)
+
+
 # Function to write log entries directly to a file
 def log_entry(log_type, service_id, name, status):
     # Define the log file name within the log folder
-    create_directory(LOG_FOLDER)
     log_filename = os.path.join(
         LOG_FOLDER, f"logfile_{CURRENT_DATE.strftime('%Y-%m-%d_%H-%M-%S')}.{LOG_TYPE}"
     )
@@ -84,4 +86,4 @@ def log_entry(log_type, service_id, name, status):
         if not file_exists:
             # Write the header if the file does not exist
             log_file.write("Reported Date, ServiceID, Name, Status\n")
-            log_file.write(log_entry)
+        log_file.write(log_entry)
