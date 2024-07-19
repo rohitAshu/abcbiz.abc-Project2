@@ -224,7 +224,7 @@ class MainWindow(QMainWindow):
         self.login_button.clicked.connect(self.login_function)
         button_layout.addWidget(self.login_button)
 
-        self.close_button = QPushButton("Close Browser")
+        self.close_button = QPushButton("Close Window")
         self.close_button.clicked.connect(self.closed_browser)
         self.close_button.setFont(font)
         button_layout.addWidget(self.close_button)
@@ -304,13 +304,6 @@ class MainWindow(QMainWindow):
         else:
             show_message_box(self, QMessageBox.Warning, "Browser Error", LoginStatus)
         self.login_button.setEnabled(True)
-        # Calculate total execution time
-        end_time = time.time()
-        total_time = end_time - START_TIME
-        print_the_output_statement(
-            self.output_text,
-            f"Total execution time for login : {total_time:.2f} seconds",
-        )
 
     def upload_excel(self):
         """
@@ -439,7 +432,7 @@ class MainWindow(QMainWindow):
                     self,
                     QMessageBox.Warning,
                     "File Error",
-                    "excel is empty please choose another execel sheet",
+                    "excel is empty please choose another excel sheet",
                 )
 
         else:
@@ -459,7 +452,7 @@ class MainWindow(QMainWindow):
             self,
             QMessageBox.Question,
             "Confirmation",
-            "Are you sure you want to close the browser?",
+            "Are you sure you want to close the Window?",
         )
         if result == QMessageBox.Yes:
             self.close()  # Close the window if user clicks 'Yes'
