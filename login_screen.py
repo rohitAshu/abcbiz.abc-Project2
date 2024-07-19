@@ -11,7 +11,65 @@ from scrapping import abiotic_login, scrapping_data
 from utils import *
 from webdriver import pyppeteerBrowserInit
 
+bootstrap_style = """
 
+QWidget {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+QMainWindow {
+    background-color: #f8f9fa;
+}
+
+QLabel {
+    color: #212529;
+}
+
+QLineEdit {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 14px;
+    color: #495057;
+}
+
+QLineEdit:focus {
+    border-color: #80bdff;
+    outline: 0;
+    background-color: rgba(0, 123, 255, 0.1); /* Simulating box-shadow effect */
+}
+
+QPushButton {
+    background-color: #007bff;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    color: white;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+QPushButton:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+QPushButton:disabled {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+QTextEdit {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 14px;
+    color: #495057;
+    background-color: white;
+}
+
+"""
 class Worker(QObject):
     """
     Worker class for handling asynchronous tasks in a separate thread.
@@ -410,9 +468,7 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     app = QApplication(sys.argv)
-    stylesheet_path = os.path.join(os.path.dirname(__file__), 'css', 'style.css')
-    app.setStyleSheet(load_stylesheet(stylesheet_path))
-
+    app.setStyleSheet(bootstrap_style)
     main_window = MainWindow()
     main_window.show()
     sys.exit(app.exec_())
