@@ -224,8 +224,10 @@ class MainWindow(QMainWindow):
         self.login_button.clicked.connect(self.login_function)
         button_layout.addWidget(self.login_button)
 
+
         self.close_button = QPushButton("Close Window")
         self.close_button.clicked.connect(self.closed_browser)
+
         self.close_button.setFont(font)
         button_layout.addWidget(self.close_button)
 
@@ -444,7 +446,7 @@ class MainWindow(QMainWindow):
                 "unable to scapp data",
             )
 
-    def closed_browser(self):
+    async def closed_window(self):
         """
         Asks for user confirmation before closing the browser and application.
         """
@@ -456,6 +458,7 @@ class MainWindow(QMainWindow):
         )
         if result == QMessageBox.Yes:
             self.close()  # Close the window if user clicks 'Yes'
+            await browser.close()
 
 
 if __name__ == "__main__":

@@ -27,7 +27,6 @@ async def abiotic_login(browser, user_agent, username, password, output_text):
             element_404_error = await page.xpath(
                 '//span[@style="margin-left: 450px; margin-top: 120px; font-size: 120px; color: rgb(122, 124, 125); font-weight: 900; display: inline; position: absolute;"]'
             )
-            print(f"element_404_error  found: {element_404_error}")
             if element_404_error:
                 text = "Internal Error Occurred while running application. Please Try Again!!"
                 print(f"error {text}")
