@@ -410,7 +410,8 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     app = QApplication(sys.argv)
-    app.setStyleSheet(load_stylesheet(os.path.join("css", "style.css")))
+    stylesheet_path = os.path.join(os.path.dirname(__file__), 'css', 'style.css')
+    app.setStyleSheet(load_stylesheet(stylesheet_path))
 
     main_window = MainWindow()
     main_window.show()
