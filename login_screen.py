@@ -1,222 +1,240 @@
-"""
-This script initializes and runs a PyQt-based GUI application for web scraping and data handling.
-
-Modules:
-    - config: Configuration settings for the application.
-    - scrapping: Module for web scraping functionalities.
-    - time: Provides time-related functions.
-    - json: Provides methods for parsing and creating JSON data.
-    - sys: Provides access to system-specific parameters and functions.
-    - asyncio: Provides support for asynchronous programming.
-    - PyQt5.QtWidgets: Provides GUI elements for the application.
-    - PyQt5.QtCore: Provides core non-GUI functionality for PyQt applications.
-    - utils: Utility functions for various tasks, including window centering, JSON handling, CSV conversion, stylesheet loading, output printing, and message box display.
-"""
+import sys
+import os
+import asyncio
+from threading import Thread
+from PyQt5.QtCore import Qt, QCoreApplication, pyqtSignal, QObject
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import *
 
 from config import *
-import scrapping  # Ensure scrapping is imported correctly
-import time
-import sys
-import asyncio
-from PyQt5.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QFileDialog,
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QMessageBox,
-    QHBoxLayout,
-    QTextEdit,
-)
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-from utils import (
-    center_window,
-    convert_into_csv_and_save,
-    load_stylesheet,
-    print_the_output_statement,
-    show_message_box,
-    xlsx_to_json,
-)
+from scrapping import abiotic_login, scrapping_data
+from utils import *
+from webdriver import pyppeteerBrowserInit
 
-
-class LoginFormApp(QMainWindow):
+class Worker(QObject):
+    """
+    Worker class for handling asynchronous tasks in a separate thread.
+    
+    This class is responsible for managing login and scraping operations using asyncio. 
+    It emits signals upon the completion of these operations to communicate results back to the main thread.
+    """
+    
+    login_finished = pyqtSignal(bool, str)
+    """
+    Signal emitted when the login operation is finished.
+    
+    Parameters:
+        - status (bool): Indicates whether the login was successful.
+        - LoginStatus (str): A status message or information about the login operation.
+    """
+    
+    scrapping_finished = pyqtSignal(bool, list)
+    """
+    Signal emitted when the scraping operation is finished.
+    
+    Parameters:
+        - status (bool): Indicates whether the scraping was successful.
+        - scrapping_status (list): A list containing information or results from the scraping operation.
+    """
+    
     def __init__(self):
         """
-        Initializes the main window, sets the window title and geometry,
-        centers the window on the screen, initializes the start time,
-        and sets up the UI.
+        Initializes the Worker instance.
         """
         super().__init__()
-        self.setWindowTitle(APP_NAME)
-        self.setGeometry(500, 600, 1000, 500)
-        center_window(self)
-        self.start_time = time.time()  # Initialize start_time
+
+    def run_login_thread(self, loop, browser, user_agent, username, password, output_text, scrape_thread_event):
+        """
+        Runs the login operation in the given asyncio event loop.
+        
+        This method sets the event loop, performs the login operation asynchronously,
+        and emits the login_finished signal with the result.
+
+        Parameters:
+            - loop (asyncio.BaseEventLoop): The asyncio event loop to run the login coroutine.
+            - browser: The browser instance to be used for the login operation.
+            - user_agent (str): The user agent string for the browser.
+            - username (str): The username for login.
+            - password (str): The password for login.
+            - output_text (str): Text output to be displayed or logged.
+            - scrape_thread_event (threading.Event): Event object to signal the completion of the login operation.
+        """
+        asyncio.set_event_loop(loop)
+        global page
+        status, LoginStatus, browser, page = loop.run_until_complete(abiotic_login(browser, user_agent, username, password, output_text))
+        self.login_finished.emit(status, LoginStatus)
+        scrape_thread_event.set()
+
+    def run_scrapp_thread(self, loop, browser, page, json_data_str, output_text, scrape_thread_event):
+        """
+        Runs the scraping operation in the given asyncio event loop.
+        
+        This method sets the event loop, performs the scraping operation asynchronously,
+        and emits the scrapping_finished signal with the result.
+
+        Parameters:
+            - loop (asyncio.BaseEventLoop): The asyncio event loop to run the scraping coroutine.
+            - browser: The browser instance to be used for the scraping operation.
+            - page: The page object or instance to be used for scraping.
+            - json_data_str (str): JSON data as a string to be used in the scraping operation.
+            - output_text (str): Text output to be displayed or logged.
+            - scrape_thread_event (threading.Event): Event object to signal the completion of the scraping operation.
+        """
+        asyncio.set_event_loop(loop)
+        status, scrapping_status = loop.run_until_complete(scrapping_data(browser, page, json_data_str, output_text))
+        self.scrapping_finished.emit(status, scrapping_status)
+        scrape_thread_event.set()
+
+
+class MainWindow(QMainWindow):
+    """
+    MainWindow class for the PyQt application. It handles user interactions, including login, file upload,
+    data scraping, and output display.
+
+    Attributes:
+        username_field (QLineEdit): Input field for the username.
+        password_field (QLineEdit): Input field for the password.
+        login_button (QPushButton): Button to initiate login.
+        close_button (QPushButton): Button to close the browser.
+        upload_csv_button (QPushButton): Button to upload an Excel file.
+        scrap_data_button (QPushButton): Button to start data scraping.
+        output_text (QTextEdit): Widget to display output and status messages.
+    """
+    def __init__(self):
+        super().__init__()
         self.initUI()
 
     def initUI(self):
-        """
-        Sets up the user interface of the main window.
+        self.setWindowTitle(APP_TITLE)
+        self.setGeometry(500, 600, 1000, 500)
+        center_window(self)
 
-        This method creates labels, input fields for username and password,
-        login and close buttons, upload CSV and scrap data buttons, and an output text area.
-
-        Signals are connected for login, close, upload CSV, and scrap data buttons.
-        """
-        print("initUI call")
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        # Create vertical layout for central widget
         layout = QVBoxLayout()
-        # Application title label
-        app_title_label = QLabel(f"<h1> {APP_NAME}</h1>")
-        app_title_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(app_title_label)
-
         central_widget.setLayout(layout)
 
+        app_title_label = QLabel(f"<h1>{APP_NAME}</h1>")
+        app_title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(app_title_label)
+        # IMplementation the Fonts 
         font = QFont()
         font.setBold(True)
-
-        # Form layout for username and password
+        # Form Layout 
         form_layout = QVBoxLayout()
         form_layout.addSpacing(20)
         layout.addLayout(form_layout)
-
-        # Username Label
+        # added teh Form layout for  username
         form_layout.addWidget(QLabel("<b>Enter the username and email address:</b>"))
-        # Username Input Field
         self.username_field = QLineEdit()
         self.username_field.setPlaceholderText("Enter the username and email address")
         self.username_field.setFont(font)
-        self.username_field.setStyleSheet("height: 20px;")  # Example: increase height
+        self.username_field.setStyleSheet("height: 20px;")
         form_layout.addWidget(self.username_field)
-
-        # Password Label
+        # added teh Form layout for  password 
         form_layout.addWidget(QLabel("<b>Enter the password:</b>"))
-        # Password Input Field
         self.password_field = QLineEdit()
         self.password_field.setEchoMode(QLineEdit.Password)
-        self.password_field.setStyleSheet("height: 20px;")  # Example: increase height
+        self.password_field.setStyleSheet("height: 20px;")
         self.password_field.setPlaceholderText("Enter the password")
         self.password_field.setFont(font)
         form_layout.addWidget(self.password_field)
 
-        # Button layout for login and close buttons
         button_layout = QHBoxLayout()
         form_layout.addLayout(button_layout)
-
-        # Login Button Layout
+        # added Button Layout for Login 
         self.login_button = QPushButton("Login")
-        self.login_button.clicked.connect(self.login)
         self.login_button.setFont(font)
+        self.login_button.clicked.connect(self.login_function)
         button_layout.addWidget(self.login_button)
 
-        # Close Button Layout
         self.close_button = QPushButton("Close Browser")
-        self.close_button.clicked.connect(self.close_window)
+        self.close_button.clicked.connect(self.closed_browser)
         self.close_button.setFont(font)
         button_layout.addWidget(self.close_button)
 
-        # Separate button layout for upload CSV and scrap data buttons
         bottom_button_layout = QHBoxLayout()
         layout.addLayout(bottom_button_layout)
 
-        # Upload CSV Button Style and Design
-        self.upload_csv_button = QPushButton("Upload CSV")
+        self.upload_csv_button = QPushButton("Upload Excel File")
         self.upload_csv_button.setEnabled(False)
-        self.upload_csv_button.clicked.connect(self.upload_csv)
+        self.upload_csv_button.clicked.connect(self.upload_excel)
         self.upload_csv_button.setFont(font)
         bottom_button_layout.addWidget(self.upload_csv_button)
 
-        # Scrap Data Button Style and Design
         self.scrap_data_button = QPushButton("Scrap Data")
         self.scrap_data_button.setEnabled(False)
         self.scrap_data_button.clicked.connect(self.scrap_data_button_clicked)
         self.scrap_data_button.setFont(font)
         bottom_button_layout.addWidget(self.scrap_data_button)
 
-        # Output text
         layout.addWidget(QLabel("<b>Output:</b>"))
         self.output_text = QTextEdit()
         self.output_text.setReadOnly(True)
-        self.output_text.setFont(QFont("Arial", 12))  # Example: set font
-        self.output_text.setFont(font)
-        self.output_text.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.output_text.setFont(QFont("Arial", 12))
         layout.addWidget(self.output_text)
 
-        # Center the main window
-        center_window(self)
 
-    def login(self):
+
+    def login_function(self):
         """
-        Handle the login process for the user.
-
-        This method retrieves the username and password from the input fields,
-        validates the input, and performs an asynchronous login operation.
-        If the login is successful, it updates the UI components accordingly.
-        If the login fails, it displays an error message.
-
-        Raises:
-            ValidationError: If the username or password fields are empty.
-            LoginError: If the login details are invalid.
+        Handles the login process by retrieving user input and starting a worker thread to perform the login.
         """
         username = self.username_field.text()
         password = self.password_field.text()
-        # Validate input fields
+
+        self.login_button.setEnabled(False)
+        self.upload_csv_button.setEnabled(False)
+        self.scrap_data_button.setEnabled(False)
+
         if username == "" or password == "":
-            show_message_box(
-                self,
-                QMessageBox.Warning,
-                "vaidation error",
-                "Please Enter the Username and Password",
-            )
+            show_message_box(self, QMessageBox.Warning, "Validation Error", "Please enter the username and password")
+            self.login_button.setEnabled(True)
         else:
-            # Perform asynchronous login operation
-            (
-                status,
-                login_status,
-                browser,
-                page,
-            ) = asyncio.get_event_loop().run_until_complete(
-                scrapping.abiotic_login(
-                    username=username, password=password, output_text=self.output_text
-                )
+            global browser, user_agent
+            browser, user_agent = pyppeteerBrowserInit(NEW_EVENT_LOOP)
+
+            self.worker = Worker()
+            self.worker.login_finished.connect(self.on_login_finished)
+
+            scrape_thread = Thread(
+                target=self.worker.run_login_thread,
+                args=(NEW_EVENT_LOOP, browser, user_agent, username, password, self.output_text, THREAD_EVENT)
             )
-            self.browser = browser  # Store browser in instance variable
-            self.page = page  # Store page in instance variable
-            if status:
-                print("login_status", login_status)
-                print_the_output_statement( self.output_text, login_status)
-                # Update UI components on successful login
-                self.username_field.setReadOnly(True)
-                self.password_field.setReadOnly(True)
-                self.upload_csv_button.setEnabled(True)
-                self.scrap_data_button.setEnabled(False)
-                self.login_button.setEnabled(False)
-            else:
-                show_message_box(
-                    self,
-                    QMessageBox.Warning,
-                    "vaidation error",
-                    "Invalid Login Details and please enter login Details",
-                )
-                print("Invalid Login Details")
+            scrape_thread.start()
 
-    def scrap_data(self, file_path):
-        print("Scraping data...")
-        print(file_path)
-        self.output_text.append(f"Scraping data from: {file_path}")
+    def on_login_finished(self, status, LoginStatus):
+        """
+        Slot to handle the completion of the login process.
 
-    def upload_csv(self):
+        Args:
+            status (bool): Indicates whether the login was successful.
+            LoginStatus (str): Status message related to login.
+        """
+        if status:
+            print_the_output_statement(self.output_text, LoginStatus)
+            self.upload_csv_button.setEnabled(True)
+        else:
+            show_message_box(self, QMessageBox.Warning, "Browser Error", LoginStatus)
+        self.login_button.setEnabled(True)
+        # Calculate total execution time
+        end_time = time.time()
+        total_time = end_time - START_TIME
+        print_the_output_statement(
+            self.output_text, f"Total execution time for login : {total_time:.2f} seconds"
+        )
+    
+
+
+    def upload_excel(self):
+        """
+        Opens a file dialog for the user to select an Excel file, then enables the scraping button.
+        """
+        print_the_output_statement( self.output_text, f"Uploading Excel..." )
         options = QFileDialog.Options()
-        file_path, _ = QFileDialog.getOpenFileName(
-        self, "Select File Name", "", "Excel Files (*.xlsx)", options=options
-    )
+        global file_path
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select File Name", "", "Excel Files (*.xlsx)", options=options)
         if file_path:
             self.file_path = file_path  # Store file_path in instance variable
             self.scrap_data_button.setEnabled(True)  # Enable Scrap Data button
@@ -225,19 +243,49 @@ class LoginFormApp(QMainWindow):
                 self.output_text, f"excel  file selected {file_path}"
             )
         else:
-            self.scrap_data_button.setEnabled(False)  # Enable Scrap Data button
-            self.upload_csv_button.setEnabled(True)  # Enable Scrap Data button
             show_message_box(
                 self,
                 QMessageBox.Warning,
                 "File Error",
-                "Please Choose the Correct CSV FILE",
+                "Please Choose the Correct Excel  File",
             )
 
+    def on_scrapping_finished(self, status, scrapping_status):
+        """
+        Slot to handle the completion of the data scraping process.
+
+        Args:
+            status (bool): Indicates whether the scraping was successful.
+            scrapping_status (list): Status messages related to scraping.
+        """
+        if status:
+            print_the_output_statement( self.output_text, f"Scraping completed.")
+            options = QFileDialog.Options()
+            folder_path = QFileDialog.getExistingDirectory( self, "Select Directory", options=options)
+            if folder_path:
+                outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
+                print("outputfile", outputfile)
+                convert_into_csv_and_save(scrapping_status, outputfile)
+                print_the_output_statement(self.output_text,f"Data saved successfully to {outputfile}")
+                show_message_box(self,QMessageBox.NoIcon, "success", f"Data saved successfully to {outputfile}")
+            else:
+                show_message_box( self, QMessageBox.Warning,"error", "data successfully found succssfully but failed to the saved the data" )
+            self.upload_csv_button.setEnabled(False)
+            self.scrap_data_button.setEnabled(False)
+            self.login_button.setEnabled(True)
+        else:
+            show_message_box(self, QMessageBox.Warning, "Browser Error", 'Internal Error Occurred while running application. Please Try Again!!')
+        self.login_button.setEnabled(True)
+        end_time = time.time()
+        total_time = end_time - START_TIME
+        print_the_output_statement(
+            self.output_text, f"Total execution time for Scrapping : {total_time:.2f} seconds"
+        )
+
     def scrap_data_button_clicked(self):
-        file_path = self.file_path  # Get the file path from class attributes
-        browser = self.browser  # Get the browser instance from class attributes
-        page = self.page  # Get the page instance from class attributes
+        """
+        Handles the process of starting data scraping after an Excel file has been uploaded.
+        """
         print_the_output_statement(
             self.output_text, "Scrapping started, please wait for few minutes."
         )
@@ -247,60 +295,38 @@ class LoginFormApp(QMainWindow):
                 print("json data is found")
                 missing_headers = [ header for header in ["Server_ID", "Last_Name"] if header not in csv_header]
                 if missing_headers:
-                    print("if missing_headers:")
+                    print('missing the headers ')
                     self.upload_csv_button.setEnabled(True)
                     self.scrap_data_button.setEnabled(False)
-                    show_message_box(self, QMessageBox.Warning,"File Error", "missing the header in the csv please choose the correct excel ",)
+                    show_message_box(self, QMessageBox.Warning,"File Error", "missing the header in the csv please choose the correct excel file")
                 else:
-                    print('Hellooooooooooo ')
-                    status, scrapping_status = asyncio.get_event_loop().run_until_complete(
-                            scrapping.scrapping_data(
-                                browser, page, json_data_str , self.output_text
-)
-                        )
-                    if status:
-                        print_the_output_statement(
-                                self.output_text, f"Scraping completed."
-                            )
-                        options = QFileDialog.Options()
-                        folder_path = QFileDialog.getExistingDirectory( self, "Select Directory", options=options)
-                        if folder_path:
-                            outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
-                            print("outputfile", outputfile)
-                            convert_into_csv_and_save(scrapping_status, outputfile)
-                            self.login_button.setEnabled(True)
-                            self.scrap_data_button.setEnabled(False)
-                            self.upload_csv_button.setEnabled(False)
-                            print_the_output_statement(
-                                    self.output_text,
-                                    f"Data saved successfully to {outputfile}",
-                                )
-                            show_message_box(
-                                    self,
-                                    QMessageBox.NoIcon,
-                                    "success",
-                                    f"Data saved successfully to {outputfile}",
-                                )
-                        else:
-                            show_message_box( self, QMessageBox.Warning,"error", "data successfully found succssfully but failed to the saved the data" )
-                    else:
-                        print('Something Wrong')
+                    print('missing the headers ')
+                    self.worker = Worker()
+                    self.worker.scrapping_finished.connect(self.on_scrapping_finished)
+                    scrape_thread = Thread(
+                        target=self.worker.run_scrapp_thread,
+                        args=(NEW_EVENT_LOOP, browser, page, json_data_str,  self.output_text, THREAD_EVENT)
+                    )
+                    scrape_thread.start()
             else:
                 self.upload_csv_button.setEnabled(True)
                 self.scrap_data_button.setEnabled(False)
                 print("json data is not Found")
-                self.upload_csv_button.setEnabled(True)
-                self.scrap_data_button.setEnabled(False)
                 show_message_box(self, QMessageBox.Warning,"File Error", "excel is empty please choose another execel sheet",)
-    
-    def close_window(self):
+
+        else:
+           
+           show_message_box(
+                self,
+                QMessageBox.Warning,
+                "File Error",
+                "unable to scapp data",
+            ) 
+
+
+    def closed_browser(self):
         """
-        Prompt the user with a confirmation message box to close the window.
-
-        If the user clicks 'Yes' in the confirmation message box, the window is closed.
-
-        Returns:
-            None
+        Asks for user confirmation before closing the browser and application.
         """
         result = show_message_box(
             self,
@@ -311,31 +337,11 @@ class LoginFormApp(QMainWindow):
         if result == QMessageBox.Yes:
             self.close()  # Close the window if user clicks 'Yes'
 
-
-def main():
-    """
-    Main function to run the application.
-
-    Initializes the QApplication, sets the stylesheet, creates and shows the login form window,
-    and starts the application event loop.
-
-    Usage:
-        - Ensure 'css/style.css' exists for the stylesheet to be loaded correctly.
-        - Replace 'LoginFormApp' with your actual login form application class.
-
-    Returns:
-        None
-    """
-    app = QApplication(sys.argv)  # Create the QApplication instance
-
-    css_file_path = os.path.join("css", "style.css")  # Path to your stylesheet
-    app.setStyleSheet(load_stylesheet(css_file_path))  # Load and apply the stylesheet
-
-    window = LoginFormApp()  # Create an instance of your login form application
-    window.show()  # Show the login form window
-
-    sys.exit(app.exec_())  # Start the application event loop and exit when it's done
-
-
 if __name__ == "__main__":
-    main()
+    QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    app = QApplication(sys.argv)
+    app.setStyleSheet(load_stylesheet(os.path.join("css", "style.css")))
+
+    main_window = MainWindow()
+    main_window.show()
+    sys.exit(app.exec_())
