@@ -226,7 +226,7 @@ class MainWindow(QMainWindow):
 
 
         self.close_button = QPushButton("Close Window")
-        self.close_button.clicked.connect(self.closed_browser)
+        self.close_button.clicked.connect(self.closed_window)
 
         self.close_button.setFont(font)
         button_layout.addWidget(self.close_button)
