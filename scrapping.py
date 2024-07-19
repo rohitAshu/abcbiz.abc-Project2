@@ -34,41 +34,44 @@ async def abiotic_login(browser, user_agent, username, password, output_text):
                 return False, text, "", ""
             else:
                 # Username Elements
-                username_xpath = '//*[@id="username"]'
-                await page.waitForXPath(username_xpath)
-                username_element = await page.xpath(username_xpath)
-                await username_element[0].type(username)
+                username_selector = '#username'  # CSS selector for the element with id 'username'
+                await page.waitForSelector(username_selector)
+                username_element = await page.querySelector(username_selector)
+                await username_element.type(username)
                 print(f"Enter the username with type {username}")
                 await asyncio.sleep(3)
-                password_xpath = '//*[@id="password"]'
-                await page.waitForXPath(password_xpath)
-                password_element = await page.xpath(password_xpath)
-                # await password_element[0].type('19MichaelBrewer68!')
-                await password_element[0].type(password)
+
+                await asyncio.sleep(3)
+                # Password 
+                password_selector = '#password'  # CSS selector for the element with id 'password'
+                await page.waitForSelector(password_selector)
+                password_element = await page.querySelector(password_selector)
+                await password_element.type(password)
                 print(f'Enter the password with secure password {"*" * len(password)}')
                 await asyncio.sleep(3)
-                login_button_xpath = '//*[@id="root"]/div/div[3]/div/div/div[2]/div[1]/form/div[1]/button/span[1]'
-                await page.waitForXPath(login_button_xpath)
-                login_button_element = await page.xpath(login_button_xpath)
-                await login_button_element[0].click()
-                print("Clicked the login button...")
+                # Login Button Clicked 
+                login_button_selector = 'button.abc-login_submit-button_Sl8_I'  # CSS selector for the button with the specific class
+                await page.waitForSelector(login_button_selector)
+                login_button = await page.querySelector(login_button_selector)
+                await login_button.click()
+                print('Login button clicked')
                 await asyncio.sleep(7)
-                popup_xpath = '//*[@role="alertdialog"]'
-                popup_element = await page.xpath(popup_xpath)
+                popup_selector = '[role="alertdialog"]'  # CSS selector for the element with role="alertdialog"
+                popup_element = await page.querySelector(popup_selector)
                 if popup_element:
-                    popup_text = await (
-                        await popup_element[0].getProperty("textContent")
-                    ).jsonValue()
+                    popup_text = await popup_element.querySelectorEval('pre', 'node => node.innerText')
                     print("popup_text", popup_text)
                     return False, popup_text, "", ""
                 else:
-                    # Perform further actions after login (example: clicking a button)
-                    target_button_xpath = '//*[@id="root"]/div/div[3]/div/div[2]/div[1]/h1/div[2]/div/button/span/span'
-                    await page.waitForXPath(target_button_xpath)
-                    target_button_element = await page.xpath(target_button_xpath)
-                    await target_button_element[0].click()
+                    # Select the button by its aria-label and click it
+                    button_aria_label = 'Switch Dashboard'
+                    button_selector = f'[aria-label="{button_aria_label}"]'
+                    await page.waitForSelector(button_selector)
+                    button_element = await page.querySelector(button_selector)
+                    await button_element.click()
+                    print(f'Clicked the button with aria-label "{button_aria_label}"')
                     await asyncio.sleep(5)
-                    print("target_button_element element is clickwed")
+                    # Second 
                     target_element_xpath = '//*[@id="long-menu"]/div[2]/ul/li'
                     await page.waitForXPath(target_element_xpath)
                     target_element = await page.xpath(target_element_xpath)
