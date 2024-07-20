@@ -272,7 +272,6 @@ class MainWindow(QMainWindow):
             )
             self.login_button.setEnabled(True)
         else:
-            print('Hellooooooooooooooooo Bheem Singh Negi')
             global browser
             browser = pyppeteerBrowserInit(NEW_EVENT_LOOP)
 
