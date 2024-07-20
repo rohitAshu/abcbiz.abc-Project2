@@ -1,9 +1,6 @@
 from datetime import datetime
-import json
 from config import *
-from utils import is_valid_json, parse_json, print_the_output_statement, page_load
-from webdriver import pyppeteerBrowserInit
-from fake_useragent import UserAgent
+from utils import parse_json, print_the_output_statement, page_load
 from pyppeteer.errors import TimeoutError as PyppeteerTimeoutError
 import asyncio
 import pyppeteer
@@ -11,12 +8,11 @@ from pyppeteer_stealth import stealth
 from utils import print_the_output_statement
 
 
-async def abiotic_login(browser, user_agent, username, password, output_text):
+async def abiotic_login(browser, username, password, output_text):
     print("Login Processing.........................")
     page = await browser.newPage()  # type: ignore
     await stealth(page)
     await page.setViewport({"width": WIDTH, "height": HEIGHT})
-    await page.setUserAgent(user_agent)
     Response = ""
     try:
         print_the_output_statement(output_text, f"Logging in to the website {LOGINURL}")
@@ -33,7 +29,9 @@ async def abiotic_login(browser, user_agent, username, password, output_text):
                 return False, text, "", ""
             else:
                 # Username Elements
-                username_selector = '#username'  # CSS selector for the element with id 'username'
+                username_selector = (
+                    "#username"  # CSS selector for the element with id 'username'
+                )
                 await page.waitForSelector(username_selector)
                 username_element = await page.querySelector(username_selector)
                 await username_element.type(username)
@@ -41,36 +39,40 @@ async def abiotic_login(browser, user_agent, username, password, output_text):
                 await asyncio.sleep(3)
 
                 await asyncio.sleep(3)
-                # Password 
-                password_selector = '#password'  # CSS selector for the element with id 'password'
+                # Password
+                password_selector = (
+                    "#password"  # CSS selector for the element with id 'password'
+                )
                 await page.waitForSelector(password_selector)
                 password_element = await page.querySelector(password_selector)
                 await password_element.type(password)
                 print(f'Enter the password with secure password {"*" * len(password)}')
                 await asyncio.sleep(3)
-                # Login Button Clicked 
-                login_button_selector = 'button.abc-login_submit-button_Sl8_I'  # CSS selector for the button with the specific class
+                # Login Button Clicked
+                login_button_selector = "button.abc-login_submit-button_Sl8_I"  # CSS selector for the button with the specific class
                 await page.waitForSelector(login_button_selector)
                 login_button = await page.querySelector(login_button_selector)
                 await login_button.click()
-                print('Login button clicked')
+                print("Login button clicked")
                 await asyncio.sleep(7)
                 popup_selector = '[role="alertdialog"]'  # CSS selector for the element with role="alertdialog"
                 popup_element = await page.querySelector(popup_selector)
                 if popup_element:
-                    popup_text = await popup_element.querySelectorEval('pre', 'node => node.innerText')
+                    popup_text = await popup_element.querySelectorEval(
+                        "pre", "node => node.innerText"
+                    )
                     print("popup_text", popup_text)
                     return False, popup_text, "", ""
                 else:
                     # Select the button by its aria-label and click it
-                    button_aria_label = 'Switch Dashboard'
+                    button_aria_label = "Switch Dashboard"
                     button_selector = f'[aria-label="{button_aria_label}"]'
                     await page.waitForSelector(button_selector)
                     button_element = await page.querySelector(button_selector)
                     await button_element.click()
                     print(f'Clicked the button with aria-label "{button_aria_label}"')
                     await asyncio.sleep(5)
-                    # Second 
+                    # Second
                     target_element_xpath = '//*[@id="long-menu"]/div[2]/ul/li'
                     await page.waitForXPath(target_element_xpath)
                     target_element = await page.xpath(target_element_xpath)
@@ -97,10 +99,12 @@ async def abiotic_login(browser, user_agent, username, password, output_text):
 async def scrapping_data(browser, page, json_data, output_text):
     print("scrapping_data")
     json_object = parse_json(json_data)
+    # print("json_object", json_object)
     Response = []
 
     try:
         for record in json_object:
+            table_data = {}  # Initialize table_data for each record
             service_number = int(record["Server_ID"])
             last_name = record["Last_Name"]
             print("last_name", last_name)
@@ -140,12 +144,20 @@ async def scrapping_data(browser, page, json_data, output_text):
                                         """
                 element_exists = await page.evaluate(check_script)
                 if element_exists:
-                    log_entry(
-                        "ERROR",
-                        service_number,
-                        last_name,
-                        f"No data found",
-                    )
+                    # expirationDate,lastName,name,reportDate,service,status,training
+                    table_data["expirationDate"] = ''
+                    table_data["lastName"] = last_name
+                    table_data["reportDate"] = datetime.now().strftime("%Y-%m-%d")
+                    table_data["service"] = service_number
+                    table_data["status"] = "No data found"
+                    table_data["training"] = ''
+                    Response.append(table_data)
+                    # log_entry(
+                    #     "ERROR",
+                    #     service_number,
+                    #     last_name,
+                    #     f"No data found",
+                    # )
                     print(
                         f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}",
                     )
@@ -154,7 +166,7 @@ async def scrapping_data(browser, page, json_data, output_text):
                     print(
                         f"data found on the {service_number}",
                     )
-                    log_entry("INFO", service_number, last_name, "success")
+                    # log_entry("INFO", service_number, last_name, "success")
                     print(
                         f"Getting data from table for {service_number } and {last_name}"
                     )
@@ -179,6 +191,9 @@ async def scrapping_data(browser, page, json_data, output_text):
                         table_data["reportDate"] = datetime.now().strftime("%Y-%m-%d")
                         table_data["lastName"] = (
                             last_name  # Replace with actual last name
+                        )
+                        table_data["status"] = (
+                            'success'  # Replace with actual last name
                         )
                         Response.append(table_data)
                 await page.waitForXPath(
