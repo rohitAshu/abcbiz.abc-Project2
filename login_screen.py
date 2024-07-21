@@ -182,7 +182,7 @@ class MainWindow(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle(APP_TITLE)
-        self.setGeometry(500, 600, 1000, 500)
+        self.setGeometry(500, 600, 800, 500)
         center_window(self)
 
         central_widget = QWidget()

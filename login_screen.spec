@@ -14,6 +14,7 @@ a = Analysis(
     pathex=['.'],
     binaries=[],
     datas=[
+        
         (pyppeteer_stealth_js_path, 'pyppeteer_stealth/js'),
     ],
     hiddenimports=['PyQt5', 'screeninfo', 'pyppeteer', 'pandas', 'pyppeteer_stealth'],

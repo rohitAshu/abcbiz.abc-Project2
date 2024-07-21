@@ -149,7 +149,8 @@ async def scrapping_data(browser, page, json_data, output_text):
                     table_data["lastName"] = last_name
                     table_data["reportDate"] = datetime.now().strftime("%Y-%m-%d")
                     table_data["service"] = service_number
-                    table_data["status"] = "No data found"
+                    table_data["status"] = ''
+                    table_data["record data"] = "No data found"
                     table_data["training"] = ""
                     Response.append(table_data)
                     # log_entry(
@@ -192,7 +193,7 @@ async def scrapping_data(browser, page, json_data, output_text):
                         table_data["lastName"] = (
                             last_name  # Replace with actual last name
                         )
-                        table_data["status"] = (
+                        table_data["record data"] = (
                             "success"  # Replace with actual last name
                         )
                         Response.append(table_data)
