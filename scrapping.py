@@ -145,12 +145,12 @@ async def scrapping_data(browser, page, json_data, output_text):
                 element_exists = await page.evaluate(check_script)
                 if element_exists:
                     # expirationDate,lastName,name,reportDate,service,status,training
-                    table_data["expirationDate"] = ''
+                    table_data["expirationDate"] = ""
                     table_data["lastName"] = last_name
                     table_data["reportDate"] = datetime.now().strftime("%Y-%m-%d")
                     table_data["service"] = service_number
                     table_data["status"] = "No data found"
-                    table_data["training"] = ''
+                    table_data["training"] = ""
                     Response.append(table_data)
                     # log_entry(
                     #     "ERROR",
@@ -193,7 +193,7 @@ async def scrapping_data(browser, page, json_data, output_text):
                             last_name  # Replace with actual last name
                         )
                         table_data["status"] = (
-                            'success'  # Replace with actual last name
+                            "success"  # Replace with actual last name
                         )
                         Response.append(table_data)
                 await page.waitForXPath(

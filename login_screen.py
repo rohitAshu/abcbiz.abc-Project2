@@ -317,9 +317,9 @@ class MainWindow(QMainWindow):
             self, "Select File Name", "", "Excel Files (*.xlsx)", options=options
         )
         if file_path:
-            self.file_path = file_path  # Store file_path in instance variable
-            self.scrap_data_button.setEnabled(True)  # Enable Scrap Data button
-            self.upload_csv_button.setEnabled(False)  # Enable Scrap Data button
+            self.file_path = file_path
+            self.scrap_data_button.setEnabled(True)
+            self.upload_csv_button.setEnabled(False)
             print_the_output_statement(
                 self.output_text, f"excel  file selected {file_path}"
             )
@@ -456,8 +456,7 @@ class MainWindow(QMainWindow):
             "Are you sure you want to close the Window?",
         )
         if result == QMessageBox.Yes:
-            self.close()  # Close the window if user clicks 'Yes'
-            # await browser.close()
+            self.close()
 
 
 if __name__ == "__main__":

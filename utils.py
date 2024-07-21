@@ -53,7 +53,6 @@ def show_message_box(parent, icon_type, title, text):
     msg_box.setIcon(icon_type)
     msg_box.setWindowTitle(title)
     msg_box.setText(text)
-    # Set standard buttons based on icon_type using a ternary operator
     (
         msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         if icon_type == QMessageBox.Question
@@ -72,7 +71,6 @@ def center_window(window):
 def find_chrome_path():
     system = platform.system()
     print(f"System: {system}")
-    # Handle Windows systems
     if system == "Windows":
         possible_paths = [
             os.path.join(
@@ -90,8 +88,6 @@ def find_chrome_path():
                 "chrome.exe",
             ),
         ]
-
-        # Windows 10 and 11 might have additional installation paths
         windows_specific_paths = [
             os.path.join(
                 os.environ.get("LOCALAPPDATA", "C:\\Users\\%USERNAME%\\AppData\\Local"),
@@ -103,16 +99,10 @@ def find_chrome_path():
             ),
         ]
         possible_paths.extend(windows_specific_paths)
-
-        # Check if Chrome exists at any of these paths
         chrome_path = next(
             (path for path in possible_paths if os.path.exists(path)), None
         )
-
-        # Example temporary directory (adjust according to your use case)
         temp_dir = os.path.join(os.environ.get("TEMP", "C:\\Temp"), "chrome_temp")
-
-        # Clean up the temporary directory
         try:
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
@@ -120,16 +110,12 @@ def find_chrome_path():
             print(f"Error: {e.strerror}")
 
         return chrome_path
-
-    # Handle Linux systems (Ubuntu)
     elif system == "Linux":
         chrome_path = shutil.which("google-chrome") or shutil.which(
             "google-chrome-stable"
         )
         if chrome_path:
             return chrome_path
-
-        # Additional common paths for Chrome on Ubuntu
         linux_specific_paths = [
             "/usr/bin/google-chrome",
             "/usr/bin/google-chrome-stable",
@@ -138,8 +124,6 @@ def find_chrome_path():
         return next(
             (path for path in linux_specific_paths if os.path.exists(path)), None
         )
-
-    # Return None if Chrome is not found
     return None
 
 
@@ -181,27 +165,29 @@ def load_stylesheet(file_path):
 
 
 def xlsx_to_json(xlsx_file_path):
-    # Read the Excel file
     df = pd.read_excel(xlsx_file_path)
-
-    # Convert the DataFrame to a dictionary
     data_dict = df.to_dict(orient="records")
-
-    # Convert the dictionary to a JSON string
     json_data = json.dumps(data_dict, indent=4)
-
-    # Get the total number of rows
     num_records = len(df)
-
-    # Get the list of headers
     header_columns = list(df.columns)
-
     return header_columns, json_data, num_records
 
 
 def parse_json(json_string):
+    """
+    Parses a JSON string and returns a Python dictionary.
+
+    Args:
+        json_string (str): The JSON string to be parsed.
+
+    Returns:
+        dict: The parsed JSON data as a Python dictionary.
+
+    Raises:
+        JSONDecodeError: If the JSON string cannot be decoded.
+        Exception: If any other error occurs during parsing.
+    """
     try:
-        # Load JSON data
         json_data = json.loads(json_string)
         return json_data
     except json.JSONDecodeError as e:
@@ -211,6 +197,13 @@ def parse_json(json_string):
 
 
 def is_valid_json(json_string):
+    """
+    Checks if a given string is a valid JSON.
+    Args:
+        json_string (str): The JSON string to be validated.
+    Returns:
+        bool: True if the JSON string is valid, False otherwise.
+    """
     try:
         json.loads(json_string)
         return True
