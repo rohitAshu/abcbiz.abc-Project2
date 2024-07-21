@@ -31,7 +31,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='login_screen',
+    name='ABC Online Portal',
     debug=True,  # Enable debug mode
     bootloader_ignore_signals=False,
     strip=False,
@@ -49,5 +49,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='login_screen',
+    name='ABC Online Portal APP',
 )
