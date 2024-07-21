@@ -4,6 +4,7 @@ from utils import parse_json, print_the_output_statement, page_load
 from pyppeteer.errors import TimeoutError as PyppeteerTimeoutError
 import asyncio
 import pyppeteer
+import math
 from pyppeteer_stealth import stealth
 from utils import print_the_output_statement
 
@@ -14,6 +15,7 @@ async def abiotic_login(browser, username, password, output_text):
     await stealth(page)
     await page.setViewport({"width": WIDTH, "height": HEIGHT})
     Response = ""
+    # return True, Response, browser, page
     try:
         print_the_output_statement(output_text, f"Logging in to the website {LOGINURL}")
         load_page = await page_load(page, LOGINURL)
@@ -99,15 +101,16 @@ async def abiotic_login(browser, username, password, output_text):
 async def scrapping_data(browser, page, json_data, output_text):
     print("scrapping_data")
     json_object = parse_json(json_data)
+    print_the_output_statement(output_text, f'Total Number of Records {len(json_object)}')
+
     # print("json_object", json_object)
     Response = []
-
     try:
         for record in json_object:
             table_data = {}  # Initialize table_data for each record
-            service_number = int(record["Server_ID"])
+            service_number = "" if math.isnan(record["Server_ID"]) else int(record["Server_ID"])
+            # print("service_number", service_number)
             last_name = record["Last_Name"]
-            print("last_name", last_name)
             if service_number and last_name:
                 print(
                     f"scrapping of the data {service_number} and last name {last_name}"
@@ -150,15 +153,15 @@ async def scrapping_data(browser, page, json_data, output_text):
                     table_data["reportDate"] = datetime.now().strftime("%Y-%m-%d")
                     table_data["service"] = service_number
                     table_data["status"] = ''
-                    table_data["record data"] = "No data found"
                     table_data["training"] = ""
+                    table_data["record data"] = "No data found"
                     Response.append(table_data)
-                    # log_entry(
-                    #     "ERROR",
-                    #     service_number,
-                    #     last_name,
-                    #     f"No data found",
-                    # )
+                    log_entry(
+                        "ERROR",
+                        service_number,
+                        last_name,
+                        f"No data found",
+                    )
                     print(
                         f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}",
                     )
@@ -167,7 +170,7 @@ async def scrapping_data(browser, page, json_data, output_text):
                     print(
                         f"data found on the {service_number}",
                     )
-                    # log_entry("INFO", service_number, last_name, "success")
+                    log_entry("INFO", service_number, last_name, "success")
                     print(
                         f"Getting data from table for {service_number } and {last_name}"
                     )
@@ -207,7 +210,13 @@ async def scrapping_data(browser, page, json_data, output_text):
 
                 await clear_button[0].click()
             else:
-                print("error")
+                log_entry(
+                        "ERROR",
+                        service_number,
+                        last_name,
+                        f'Server ID or Last name is messing of last name {last_name}',
+                    )
+                print_the_output_statement(output_text, f'Server ID or Last name is messing of last name {last_name}')
     except PyppeteerTimeoutError as timeout_error:
         print(f"timeout_error {timeout_error}")
     except pyppeteer.errors.NetworkError as NetworkError:
@@ -216,5 +225,5 @@ async def scrapping_data(browser, page, json_data, output_text):
         print(f"NetworkError {e}")
     finally:
         await browser.close()
-    # print_the_output_statement(output_text, Response)
+    # print_the_output_statement(output_text, f"Total records processed: {processed_count}")
     return True, Response

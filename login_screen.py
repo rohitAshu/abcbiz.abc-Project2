@@ -367,7 +367,7 @@ class MainWindow(QMainWindow):
                 )
             self.upload_csv_button.setEnabled(False)
             self.scrap_data_button.setEnabled(False)
-            # self.login_button.setEnabled(False)
+            self.login_button.setEnabled(True)
         else:
             show_message_box(
                 self,
