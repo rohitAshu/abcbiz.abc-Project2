@@ -31,7 +31,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='ABC Online Portal',
+    name='ABC Online Portal APP',
     debug=True,  # Enable debug mode
     bootloader_ignore_signals=False,
     strip=False,

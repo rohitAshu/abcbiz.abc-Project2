@@ -51,6 +51,6 @@ pyinstaller --hidden-import=pkg_resources.py2_warn --hidden-import=appdirs --hid
 
 # Build the executable using the spec file
 ```bash
-pyinstaller license_report_gen.spec
+pyinstaller login_screen.spec
 ```
 # abcbiz.abc-Project2
