@@ -17,7 +17,7 @@ async def abiotic_login(browser, username, password, output_text):
         print_the_output_statement(output_text, f"Logging in to the website {LOGINURL}")
         load_page = await page_load(page, LOGINURL)
         if load_page:
-            await asyncio.sleep(7)
+            await asyncio.sleep(10)
             # Select the element using XPath
             element_404_error = await page.xpath(
                 '//span[@style="margin-left: 450px; margin-top: 120px; font-size: 120px; color: rgb(122, 124, 125); font-weight: 900; display: inline; position: absolute;"]'
@@ -104,7 +104,7 @@ async def scrapping_data(browser, page, json_data, output_text):
     Response = []
     try:
         for index, record in enumerate(json_object):
-            # print_the_output_statement(output_text, f"Processing record {index + 1} out of {total_records}")
+            print_the_output_statement(output_text, f"Processing record {index + 1} out of {total_records}")
             table_data = {}  # Initialize table_data for each record
             service_number = "" if math.isnan(record.get("Server_ID", float('nan'))) else int(record["Server_ID"])
             last_name = record.get("Last_Name", "")
@@ -158,11 +158,13 @@ async def scrapping_data(browser, page, json_data, output_text):
                     })
                     Response.append(table_data)
                     # log_entry("ERROR", service_number, last_name, "No data found")
+                    print_the_output_statement(output_text, (f"No Data found for service number {service_number} and last name {last_name}"))
                     # print(
                     #     f"There are no records by selected search parameters for service number {service_number} and last name {last_name}")
 
                 else:
                     print(f"Data found for service number {service_number}")
+                    print_the_output_statement(output_text, (f"Data found for service number {service_number} and last name {last_name}"))
                     # log_entry("INFO", service_number, last_name, "success")
 
                     table_data = await page.evaluate(
