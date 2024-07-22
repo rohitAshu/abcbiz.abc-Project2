@@ -104,7 +104,7 @@ async def scrapping_data(browser, page, json_data, output_text):
     Response = []
     try:
         for index, record in enumerate(json_object):
-            print_the_output_statement(output_text, f"Processing record {index + 1} out of {total_records}")
+            # print_the_output_statement(output_text, f"Processing record {index + 1} out of {total_records}")
             table_data = {}  # Initialize table_data for each record
             service_number = "" if math.isnan(record.get("Server_ID", float('nan'))) else int(record["Server_ID"])
             last_name = record.get("Last_Name", "")
