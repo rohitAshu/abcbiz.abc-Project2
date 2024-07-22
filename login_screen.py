@@ -450,16 +450,17 @@ class MainWindow(QMainWindow):
             )
 
     def closed_window(self):
-        """
-        Asks for user confirmation before closing the browser and application.
-        """
-        result = show_message_box(
-            self,
-            QMessageBox.Question,
-            "Confirmation",
-            "Are you sure you want to close the Window?",
-        )
-        if result == QMessageBox.Yes:
+        reply = QMessageBox.question(self, 'Message', 'Are you sure you want to exit?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            QCoreApplication.instance().quit()
+            asyncio.ensure_future(self.close_browser())
+
+    async def close_browser(self):
+
+        if 'browser' in globals():
+            print('browser')
+            await browser.close()
             self.close()
 
 

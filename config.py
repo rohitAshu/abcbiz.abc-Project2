@@ -28,7 +28,7 @@ NEW_EVENT_LOOP = asyncio.new_event_loop()
 START_TIME = time.time()
 
 
-create_directory(LOG_FOLDER)
+# create_directory(LOG_FOLDER)
 
 
 # Function to write log entries directly to a file
