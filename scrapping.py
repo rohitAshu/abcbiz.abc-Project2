@@ -39,8 +39,6 @@ async def abiotic_login(browser, username, password, output_text):
                 await username_element.type(username)
                 print(f"Enter the username with type {username}")
                 await asyncio.sleep(3)
-
-                await asyncio.sleep(3)
                 # Password
                 password_selector = (
                     "#password"  # CSS selector for the element with id 'password'
@@ -90,12 +88,15 @@ async def abiotic_login(browser, username, password, output_text):
             return False, text, "", ""
     except PyppeteerTimeoutError as timeout_error:
         print(f"timeout_error {timeout_error}")
+        return False, 'Internal Error Occurred while running application. Please Try Again!!', "", ""
     except pyppeteer.errors.NetworkError as NetworkError:
         print(f"NetworkError {NetworkError}")
+        return False, 'Internal Error Occurred while running application. Please Try Again!!', "", ""
     except Exception as e:
         # Handle exceptions gracefully
         print(f"Exception occurred during login: {e}")
         print_the_output_statement(output_text, f"Login Process Failed: {str(e)}")
+        return False, f"Login Process Failed: {str(e)}", "", ""
 
 
 async def scrapping_data(browser, page, json_data, output_text):
