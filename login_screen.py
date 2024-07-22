@@ -319,6 +319,7 @@ class MainWindow(QMainWindow):
         if file_path:
             self.file_path = file_path
             self.scrap_data_button.setEnabled(True)
+            self.login_button.setEnabled(False)
             self.upload_csv_button.setEnabled(False)
             print_the_output_statement(
                 self.output_text, f"excel  file selected {file_path}"
