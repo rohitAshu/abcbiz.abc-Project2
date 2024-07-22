@@ -142,12 +142,10 @@ def print_the_output_statement(output, message):
 
 
 def convert_into_csv_and_save(json_data, out_put_csv):
-
     report_directory = os.path.dirname(out_put_csv)
-    print("report_directory", report_directory)
+    # print("report_directory", report_directory)
 
     create_directory(report_directory)
-    print(json_data)
     df = pd.DataFrame(json_data)
     df.to_csv(
         out_put_csv, index=False
@@ -209,3 +207,19 @@ def is_valid_json(json_string):
         return True
     except json.JSONDecodeError:
         return False
+
+
+def reformat_data(data):
+    # Create a list to store reformatted dictionaries
+    reformatted_data = []
+    # Iterate through each dictionary in the input list
+    for entry in data:
+        # Create a new dictionary to hold the reformatted key-value pairs
+        new_entry = {}
+        # Ensure all expected keys are present, with default empty strings or values
+        keys = ['expirationDate', 'lastName', 'reportDate', 'service', 'status', 'training', 'record status']
+        for key in keys:
+            new_entry[key] = entry.get(key, '')
+        # Append the reformatted dictionary to the list
+        reformatted_data.append(new_entry)
+    return reformatted_data

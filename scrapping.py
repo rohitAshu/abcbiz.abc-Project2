@@ -6,16 +6,13 @@ import asyncio
 import pyppeteer
 import math
 from pyppeteer_stealth import stealth
-from utils import print_the_output_statement
 
 
 async def abiotic_login(browser, username, password, output_text):
-    print("Login Processing.........................")
     page = await browser.newPage()  # type: ignore
     await stealth(page)
     await page.setViewport({"width": WIDTH, "height": HEIGHT})
     Response = ""
-    # return True, Response, browser, page
     try:
         print_the_output_statement(output_text, f"Logging in to the website {LOGINURL}")
         load_page = await page_load(page, LOGINURL)
@@ -102,129 +99,120 @@ async def abiotic_login(browser, username, password, output_text):
 async def scrapping_data(browser, page, json_data, output_text):
     print("scrapping_data")
     json_object = parse_json(json_data)
-    print_the_output_statement(output_text, f'Total Number of Records {len(json_object)}')
-
-    # print("json_object", json_object)
+    total_records = len(json_object)
+    print_the_output_statement(output_text, f'Total Number of Records {total_records}')
     Response = []
     try:
-        for record in json_object:
+        for index, record in enumerate(json_object):
+            print_the_output_statement(output_text, f"Processing record {index + 1} out of {total_records}")
             table_data = {}  # Initialize table_data for each record
-            service_number = "" if math.isnan(record["Server_ID"]) else int(record["Server_ID"])
-            # print("service_number", service_number)
-            last_name = record["Last_Name"]
+            service_number = "" if math.isnan(record.get("Server_ID", float('nan'))) else int(record["Server_ID"])
+            last_name = record.get("Last_Name", "")
+
             if service_number and last_name:
-                print(
-                    f"scrapping of the data {service_number} and last name {last_name}"
-                )
                 last_name_xpath = '//*[@id="lastName"]'
                 await page.waitForXPath('//*[@id="serverId"]')
                 await page.waitForXPath(last_name_xpath)
+
                 server_id_element = await page.xpath('//*[@id="serverId"]')
                 await server_id_element[0].type(str(service_number))
+
                 last_name_element = await page.xpath(last_name_xpath)
                 await last_name_element[0].type(last_name)
+
                 # Click the search button
                 search_button_xpath = '//*[@id="root"]/div/div[3]/div/div[2]/div[2]/div[1]/div[2]/div/div/div/div/div[2]/button[2]/span[1]'
                 await page.waitForXPath(search_button_xpath)
                 search_button_element = await page.xpath(search_button_xpath)
                 await search_button_element[0].click()
+
                 await asyncio.sleep(5)
+
                 viewport_height = await page.evaluate("window.innerHeight")
-                print("viewport_height element is found")
                 scroll_distance = int(viewport_height * 0.2)
                 await page.evaluate(f"window.scrollBy(0, {scroll_distance})")
-                print(f"scroll_distance progress")
+
                 check_script = """
-                                            () => {
-                                                const div = document.querySelector('div.sc-gAnuJb.gzDMq');
-                                                if (div) {
-                                                    const pElement = div.querySelector('p');
-                                                    if (pElement && pElement.textContent.trim() === 'There are no records by selected search parameters') {
-                                                        return true;
-                                                    }
-                                                }
-                                                return false;
-                                            }
-                                        """
+                () => {
+                    const div = document.querySelector('div.sc-gAnuJb.gzDMq');
+                    if (div) {
+                        const pElement = div.querySelector('p');
+                        if (pElement && pElement.textContent.trim() === 'There are no records by selected search parameters') {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                """
                 element_exists = await page.evaluate(check_script)
+
                 if element_exists:
-                    # expirationDate,lastName,name,reportDate,service,status,training
-                    table_data["expirationDate"] = ""
-                    table_data["lastName"] = last_name
-                    table_data["reportDate"] = datetime.now().strftime("%Y-%m-%d")
-                    table_data["service"] = service_number
-                    table_data["status"] = ''
-                    table_data["training"] = ""
-                    table_data["record data"] = "No data found"
+                    table_data.update({
+                        "expirationDate": "",
+                        "lastName": last_name,
+                        "reportDate": datetime.now().strftime("%Y-%m-%d"),
+                        "service": service_number,
+                        "status": '',
+                        "training": "",
+                        "record status": "No data found"
+                    })
                     Response.append(table_data)
-                    log_entry(
-                        "ERROR",
-                        service_number,
-                        last_name,
-                        f"No data found",
-                    )
-                    print(
-                        f"There are no records by selected search parameters on the service_number {service_number} and last name {last_name}",
-                    )
+                    # log_entry("ERROR", service_number, last_name, "No data found")
+                    # print(
+                    #     f"There are no records by selected search parameters for service number {service_number} and last name {last_name}")
 
                 else:
-                    print(
-                        f"data found on the {service_number}",
-                    )
-                    log_entry("INFO", service_number, last_name, "success")
-                    print(
-                        f"Getting data from table for {service_number } and {last_name}"
-                    )
+                    print(f"Data found for service number {service_number}")
+                    # log_entry("INFO", service_number, last_name, "success")
+
                     table_data = await page.evaluate(
                         """() => {
-                                        const nameElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(1) > div > div > p > span');
-                                        const serviceElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(2) > div > div > p');
-                                        const trainingElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(3) > div > div > p');
-                                        const statusElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(4) > div > div > p');
-                                        const expireDateElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(5) > div > div > p');
+                        const nameElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(1) > div > div > p > span');
+                        const serviceElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(2) > div > div > p');
+                        const trainingElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(3) > div > div > p');
+                        const statusElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(4) > div > div > p');
+                        const expireDateElement = document.querySelector('#root > div > div:nth-child(3) > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > div > div > div:nth-child(1) > div > div:nth-child(5) > div > div > p');
 
-                                        return {
-                                            name: nameElement ? nameElement.innerText.trim() : '',
-                                            service: serviceElement ? serviceElement.innerText.trim() : '',
-                                            training: trainingElement ? trainingElement.innerText.trim() : '',
-                                            status: statusElement ? statusElement.innerText.trim() : '',
-                                            expirationDate: expireDateElement ? expireDateElement.innerText.trim() : ''
-                                        };
-                                    }"""
+                        return {
+                            name: nameElement ? nameElement.innerText.trim() : '',
+                            service: serviceElement ? serviceElement.innerText.trim() : '',
+                            training: trainingElement ? trainingElement.innerText.trim() : '',
+                            status: statusElement ? statusElement.innerText.trim() : '',
+                            expirationDate: expireDateElement ? expireDateElement.innerText.trim() : ''
+                        };
+                    }"""
                     )
+
                     if table_data:
-                        table_data["reportDate"] = datetime.now().strftime("%Y-%m-%d")
-                        table_data["lastName"] = (
-                            last_name  # Replace with actual last name
-                        )
-                        table_data["record data"] = (
-                            "success"  # Replace with actual last name
-                        )
+                        table_data.update({
+                            "reportDate": datetime.now().strftime("%Y-%m-%d"),
+                            "lastName": last_name,
+                            "record status": "success"
+                        })
                         Response.append(table_data)
-                await page.waitForXPath(
-                    '//button[contains(@class, "search-box-container_action-clear")]'
-                )
 
-                clear_button = await page.xpath(
-                    '//button[contains(@class, "search-box-container_action-clear")]'
-                )
-
+                await page.waitForXPath('//button[contains(@class, "search-box-container_action-clear")]')
+                clear_button = await page.xpath('//button[contains(@class, "search-box-container_action-clear")]')
                 await clear_button[0].click()
             else:
-                log_entry(
-                        "ERROR",
-                        service_number,
-                        last_name,
-                        f'Server ID or Last name is messing of last name {last_name}',
-                    )
-                print_the_output_statement(output_text, f'Server ID or Last name is messing of last name {last_name}')
+                table_data.update({
+                    "expirationDate": "",
+                    "lastName": last_name,
+                    "reportDate": datetime.now().strftime("%Y-%m-%d"),
+                    "service": service_number,
+                    "status": '',
+                    "training": "",
+                    "record status": "Invalid Data "
+                })
+                Response.append(table_data)
+                print_the_output_statement(output_text, f'Server ID or Last name is missing for last name {last_name}')
     except PyppeteerTimeoutError as timeout_error:
-        print(f"timeout_error {timeout_error}")
-    except pyppeteer.errors.NetworkError as NetworkError:
-        print(f"NetworkError {NetworkError}")
+        print(f"Timeout error: {timeout_error}")
+    except pyppeteer.errors.NetworkError as network_error:
+        print(f"Network error: {network_error}")
     except Exception as e:
-        print(f"NetworkError {e}")
+        print(f"An unexpected error occurred: {e}")
     finally:
         await browser.close()
-    # print_the_output_statement(output_text, f"Total records processed: {processed_count}")
+
     return True, Response

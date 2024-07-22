@@ -83,7 +83,7 @@ class Worker(QObject):
     login_finished = pyqtSignal(bool, str)
     """
     Signal emitted when the login operation is finished.
-    
+
     Parameters:
         - status (bool): Indicates whether the login was successful.
         - LoginStatus (str): A status message or information about the login operation.
@@ -92,7 +92,7 @@ class Worker(QObject):
     scrapping_finished = pyqtSignal(bool, list)
     """
     Signal emitted when the scraping operation is finished.
-    
+
     Parameters:
         - status (bool): Indicates whether the scraping was successful.
         - scrapping_status (list): A list containing information or results from the scraping operation.
@@ -105,13 +105,13 @@ class Worker(QObject):
         super().__init__()
 
     def run_login_thread(
-        self,
-        loop,
-        browser,
-        username,
-        password,
-        output_text,
-        scrape_thread_event,
+            self,
+            loop,
+            browser,
+            username,
+            password,
+            output_text,
+            scrape_thread_event,
     ):
         """
         Runs the login operation in the given asyncio event loop.
@@ -137,7 +137,7 @@ class Worker(QObject):
         scrape_thread_event.set()
 
     def run_scrapp_thread(
-        self, loop, browser, page, json_data_str, output_text, scrape_thread_event
+            self, loop, browser, page, json_data_str, output_text, scrape_thread_event
     ):
         """
         Runs the scraping operation in the given asyncio event loop.
@@ -304,7 +304,7 @@ class MainWindow(QMainWindow):
             self.upload_csv_button.setEnabled(True)
         else:
             show_message_box(self, QMessageBox.Warning, "Browser Error", LoginStatus)
-        self.login_button.setEnabled(True)
+            self.login_button.setEnabled(True)
 
     def upload_excel(self):
         """
@@ -347,9 +347,11 @@ class MainWindow(QMainWindow):
                 self, "Select Directory", options=options
             )
             if folder_path:
+                reformatted = reformat_data(scrapping_status)
+
                 outputfile = f"{folder_path}/{FILE_NAME}_generate_report_{CURRENT_DATE.strftime('%Y-%B-%d')}.{FILE_TYPE}"
                 print("outputfile", outputfile)
-                convert_into_csv_and_save(scrapping_status, outputfile)
+                convert_into_csv_and_save(reformatted, outputfile)
                 print_the_output_statement(
                     self.output_text, f"Data saved successfully to {outputfile}"
                 )
@@ -391,6 +393,7 @@ class MainWindow(QMainWindow):
         print_the_output_statement(
             self.output_text, "Scrapping started, please wait for few minutes."
         )
+        self.scrap_data_button.setEnabled(False)
         if file_path:
             csv_header, json_data_str, num_records = xlsx_to_json(file_path)
             if num_records > 0:
@@ -438,12 +441,12 @@ class MainWindow(QMainWindow):
                 )
 
         else:
-
+            self.scrap_data_button.setEnabled(True)
             show_message_box(
                 self,
                 QMessageBox.Warning,
                 "File Error",
-                "unable to scapp data",
+                "unable to scape data",
             )
 
     def closed_window(self):
